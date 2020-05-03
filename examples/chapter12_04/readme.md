@@ -15,9 +15,9 @@ being considered more specialized than elementary
 transecndental functions like trigonometric functions,
 logarithmic functions, exponential functions and the like.
 
-Many special functions, although very difficult to calculate
-over wide parameter and argument ranges have remarkably
-simple small-argument approximations such as Taylor series.
+Many special functions, although they can be very difficult to calculate
+over wide parameter and argument ranges, have remarkably
+simple small-argument approximations such as a modest Taylor series.
 Cylindrical Bessel functions of complex-valued argument
 <img src="https://render.githubusercontent.com/render/math?math={z}">
 and complex-valued order
@@ -136,8 +136,27 @@ As usual, the benchmark port is toggled high prior to the
 floating-point calculation and low after the floating-point calculation.
 The three individual calculations are not calculated all at once
 in a single call of the benchmark task. Rather an index
-counting from zero to one to two selects one special function
-calculation. The success of the calculation uses a relative
-measure of floating-point closeness based on the rqatio of
-the expected answer with the control value compared with one.
+counting from zero to one to two selects one single special function
+calculation to be carried out per call cycle of the task.
 
+The success of the calculation uses a relative
+measure of floating-point closeness based on the ratio of
+the expected answer with the control value compared with one.
+A simple template function called `is_close_fraction()`
+is used to test floating-point closeness as a ratio.
+
+```
+template<typename float_type>
+bool is_close_fraction(const float_type& left,
+                       const float_type& right,
+                       const float_type& tolerance)
+{
+  const float_type ratio = left / right;
+
+  using std::fabs;
+
+  const float_type delta = fabs(static_cast<float_type>(FLOATMAX_C(1.0)) - fabs(ratio));
+
+  return (delta < tolerance);
+}
+```

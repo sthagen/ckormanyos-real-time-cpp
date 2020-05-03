@@ -1,40 +1,16 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2014.
+//  Copyright Christopher Kormanyos 2014 - 2020.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <cstddef>
-#include <cstdint>
 #include <mcal_led.h>
-#include <mcal_reg.h>
+#include <mcal_led_gpio16.h>
 
-mcal::led::led_type::led_type() : led_is_on(false)
+mcal::led::led_base& mcal::led::led0()
 {
-  // Write 1 to the GPIO16 init nibble in the Function Select 1 GPIO
-  // peripheral register to enable GPIO16 as an output.
-  mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio_gpfsel1, UINT32_C(18)>::bit_set();
+  static mcal::led::led_gpio16 l0;
 
-  // Set the GPIO16 output high (turn the OK LED off).
-  mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio_gpset0, UINT32_C(16)>::bit_set();
-}
-
-void mcal::led::led_type::toggle() const
-{
-  // Toggle the LED state.
-  // Note here that the logic of the led is inverted.
-
-  (led_is_on ? mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio_gpset0, UINT32_C(16)>::bit_set()
-             : mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio_gpclr0, UINT32_C(16)>::bit_set());
-
-  led_is_on = (!led_is_on);
-}
-
-namespace mcal
-{
-  namespace led
-  {
-    const led_type led0;
-  }
+  return l0;
 }
