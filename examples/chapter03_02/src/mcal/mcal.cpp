@@ -20,11 +20,6 @@ void mcal::init()
   mcal::irq::init(nullptr);
 
   mcal::gpt::init(nullptr);
-  mcal::ser::init(nullptr);
-  mcal::spi::init(nullptr);
-  mcal::pwm::init(nullptr);
 
   mcal::cpu::post_init();
-
-  mcal::eep::init(nullptr);
 }

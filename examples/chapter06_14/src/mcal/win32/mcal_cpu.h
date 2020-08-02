@@ -8,18 +8,19 @@
 #ifndef MCAL_CPU_2009_02_14_H_
   #define MCAL_CPU_2009_02_14_H_
 
+  #define MY_PROGMEM
+
   #include <cstdint>
+  #include <type_traits>
 
-  namespace mcal
-  {
-    namespace cpu
-    {
-      inline void init() { }
+  namespace mcal { namespace cpu {
 
-      inline void post_init() { }
+  void init();
 
-      inline void nop() { }
-    }
-  }
+  inline void post_init() { }
+
+  inline void nop() { }
+
+  } } // namespace mcal::cpu
 
 #endif // MCAL_CPU_2009_02_14_H_

@@ -243,9 +243,6 @@
     <None Include="target\micros\bcm2835_raspi_b\make\bcm2835_raspi_b_flags.gmk">
       <Filter>micros\bcm2835_raspi_b\make</Filter>
     </None>
-    <None Include="target\micros\bcm2835_raspi_b\startup\int_vect_table.s">
-      <Filter>micros\bcm2835_raspi_b\startup</Filter>
-    </None>
     <None Include="target\build\build.sh">
       <Filter>build</Filter>
     </None>
@@ -314,6 +311,9 @@
     </None>
     <None Include="target\micros\stm32l100c\make\stm32l100c_flags.gmk">
       <Filter>micros\stm32l100c\make</Filter>
+    </None>
+    <None Include="target\micros\bcm2835_raspi_b\startup\int_vect.s">
+      <Filter>micros\bcm2835_raspi_b\startup</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -402,9 +402,6 @@
       <Filter>micros\bcm2835_raspi_b\startup</Filter>
     </ClCompile>
     <ClCompile Include="target\micros\bcm2835_raspi_b\startup\crt1.cpp">
-      <Filter>micros\bcm2835_raspi_b\startup</Filter>
-    </ClCompile>
-    <ClCompile Include="target\micros\bcm2835_raspi_b\startup\int_vect.cpp">
       <Filter>micros\bcm2835_raspi_b\startup</Filter>
     </ClCompile>
     <ClCompile Include="target\micros\stm32l152\startup\crt0.cpp">

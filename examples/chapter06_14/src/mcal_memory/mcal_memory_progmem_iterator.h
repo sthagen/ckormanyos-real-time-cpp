@@ -17,12 +17,6 @@
 
   namespace mcal { namespace memory { namespace progmem {
 
-  struct input_iterator_tag                                             { };
-  struct output_iterator_tag                                            { };
-  struct forward_iterator_tag       : public input_iterator_tag         { };
-  struct bidirectional_iterator_tag : public forward_iterator_tag       { };
-  struct random_access_iterator_tag : public bidirectional_iterator_tag { };
-
   template<typename iterator_type>
   struct iterator_traits
   {
@@ -57,24 +51,24 @@
   struct iterator
   {
     using pointer           = mcal::memory::const_address_ptr<progmem_ptr<ValueType, AddressType, AddressDifferenceType>>;
-    using difference_type   = const typename pointer::difference_type;
-    using value_type        = const typename pointer::value_type;
-    using reference         = const typename pointer::value_type;
+    using difference_type   = typename pointer::difference_type;
+    using value_type        = typename pointer::value_type;
+    using reference         = typename pointer::reference;
     using iterator_category = IteratorCategoryType;
   };
 
   template<typename ValueType,
            typename AddressType,
            typename AddressDifferenceType>
-  class forward_iterator
-    : public mcal::memory::progmem::iterator<random_access_iterator_tag,
+  class progmem_iterator
+    : public mcal::memory::progmem::iterator<std::random_access_iterator_tag,
                                              ValueType,
                                              AddressType,
                                              AddressDifferenceType>
   {
   private:
     using base_class_type =
-      mcal::memory::progmem::iterator<random_access_iterator_tag,
+      mcal::memory::progmem::iterator<std::random_access_iterator_tag,
                                       ValueType,
                                       AddressType,
                                       AddressDifferenceType>;
@@ -86,23 +80,23 @@
     using reference         = typename base_class_type::reference;
     using iterator_category = typename base_class_type::iterator_category;
 
-    forward_iterator() noexcept : current(nullptr) { }
+    progmem_iterator() noexcept : current(nullptr) { }
 
-    explicit forward_iterator(const AddressType& addr) noexcept : current(addr) { }
+    explicit progmem_iterator(const AddressType& addr) noexcept : current(addr) { }
 
-    forward_iterator(const pointer x) noexcept : current(x) { }
+    progmem_iterator(const pointer x) noexcept : current(x) { }
 
     template<typename OtherIteratorType,
              typename OtherAddressType,
              typename OtherAddressDifferenceType>
-    forward_iterator(const forward_iterator<OtherIteratorType, OtherAddressType, OtherAddressDifferenceType>& other) noexcept
+    progmem_iterator(const progmem_iterator<OtherIteratorType, OtherAddressType, OtherAddressDifferenceType>& other) noexcept
       : current(static_cast<const pointer>(other.current)) { }
 
-    forward_iterator(const forward_iterator& other) noexcept : current(other.current) { }
+    progmem_iterator(const progmem_iterator& other) noexcept : current(other.current) { }
 
-    ~forward_iterator() noexcept { }
+    ~progmem_iterator() noexcept { }
 
-    forward_iterator& operator=(const forward_iterator& other) noexcept
+    progmem_iterator& operator=(const progmem_iterator& other) noexcept
     {
       if(this != &other)
       {
@@ -122,56 +116,56 @@
       return reference(*(current + n));
     }
 
-    const forward_iterator& operator++() noexcept { ++current; return *this; }
-    const forward_iterator& operator--() noexcept { --current; return *this; }
+    const progmem_iterator& operator++() noexcept { ++current; return *this; }
+    const progmem_iterator& operator--() noexcept { --current; return *this; }
 
-    forward_iterator operator++(int) noexcept { const forward_iterator tmp = *this; ++current; return tmp; }
-    forward_iterator operator--(int) noexcept { const forward_iterator tmp = *this; --current; return tmp; }
+    progmem_iterator operator++(int) noexcept { const progmem_iterator tmp = *this; ++current; return tmp; }
+    progmem_iterator operator--(int) noexcept { const progmem_iterator tmp = *this; --current; return tmp; }
 
-    forward_iterator operator+(difference_type n) const noexcept
+    progmem_iterator operator+(difference_type n) const noexcept
     {
-      return forward_iterator(current + n);
+      return progmem_iterator(current + n);
     }
 
-    forward_iterator operator-(difference_type n) const noexcept
+    progmem_iterator operator-(difference_type n) const noexcept
     {
-      return forward_iterator(current - n);
+      return progmem_iterator(current - n);
     }
 
-    const forward_iterator& operator+=(difference_type n) noexcept { current += n; return *this; }
-    const forward_iterator& operator-=(difference_type n) noexcept { current -= n; return *this; }
+    const progmem_iterator& operator+=(difference_type n) noexcept { current += n; return *this; }
+    const progmem_iterator& operator-=(difference_type n) noexcept { current -= n; return *this; }
 
   private:
     pointer current;
 
-    friend inline bool operator< (const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current <  y.current); }
-    friend inline bool operator<=(const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current <= y.current); }
-    friend inline bool operator==(const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current == y.current); }
-    friend inline bool operator!=(const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current != y.current); }
-    friend inline bool operator>=(const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current >= y.current); }
-    friend inline bool operator> (const forward_iterator& x, const forward_iterator& y) noexcept { return (x.current >  y.current); }
+    friend inline bool operator< (const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current <  y.current); }
+    friend inline bool operator<=(const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current <= y.current); }
+    friend inline bool operator==(const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current == y.current); }
+    friend inline bool operator!=(const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current != y.current); }
+    friend inline bool operator>=(const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current >= y.current); }
+    friend inline bool operator> (const progmem_iterator& x, const progmem_iterator& y) noexcept { return (x.current >  y.current); }
 
-    friend inline typename forward_iterator::difference_type
-    operator-(const forward_iterator& x,
-              const forward_iterator& y) noexcept
+    friend inline typename progmem_iterator::difference_type
+    operator-(const progmem_iterator& x,
+              const progmem_iterator& y) noexcept
     {
-      return (x.current.ptr - y.current.ptr);
+      return (x.current - y.current);
     }
 
-    friend inline forward_iterator
-    operator+(typename forward_iterator::difference_type n,
-              const forward_iterator& x) noexcept
+    friend inline progmem_iterator
+    operator+(typename progmem_iterator::difference_type n,
+              const progmem_iterator& x) noexcept
     {
-      return forward_iterator(x.current + n);
+      return progmem_iterator(x.current + n);
     }
   };
 
   template<typename input_iterator>
-  typename mcal::memory::progmem::iterator_traits<input_iterator>::difference_type
+  typename iterator_traits<input_iterator>::difference_type
   distance(input_iterator first, input_iterator last) noexcept
   {
     using local_difference_type =
-      typename mcal::memory::progmem::iterator_traits<input_iterator>::difference_type;
+      typename iterator_traits<input_iterator>::difference_type;
 
     return local_difference_type(last - first);
   }
@@ -182,11 +176,11 @@
   template <typename container_type> inline auto crbegin(const container_type& c) -> decltype(c.crbegin()) { return c.crbegin(); }
   template <typename container_type> inline auto crend  (const container_type& c) -> decltype(c.crend())   { return c.crend(); }
 
-  template <typename value_type, const mcal_progmem_uintptr_t N> inline const forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t> cbegin (const value_type(&c_array)[N] MY_PROGMEM) { return forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[0U])); }
-  template <typename value_type, const mcal_progmem_uintptr_t N> inline const forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t> cend   (const value_type(&c_array)[N] MY_PROGMEM) { return forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[N])); }
+  template <typename value_type, const mcal_progmem_uintptr_t N> inline const progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t> cbegin (const value_type(&c_array)[N] MY_PROGMEM) { return progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[0U])); }
+  template <typename value_type, const mcal_progmem_uintptr_t N> inline const progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t> cend   (const value_type(&c_array)[N] MY_PROGMEM) { return progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[N])); }
 
-  template <typename value_type, const mcal_progmem_uintptr_t N> inline const std::reverse_iterator<forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>> crbegin(const value_type(&c_array)[N] MY_PROGMEM) { return std::reverse_iterator<forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[N])); }
-  template <typename value_type, const mcal_progmem_uintptr_t N> inline const std::reverse_iterator<forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>> crend  (const value_type(&c_array)[N] MY_PROGMEM) { return std::reverse_iterator<forward_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[0U])); }
+  template <typename value_type, const mcal_progmem_uintptr_t N> inline const std::reverse_iterator<progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>> crbegin(const value_type(&c_array)[N] MY_PROGMEM) { return std::reverse_iterator<progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[N])); }
+  template <typename value_type, const mcal_progmem_uintptr_t N> inline const std::reverse_iterator<progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>> crend  (const value_type(&c_array)[N] MY_PROGMEM) { return std::reverse_iterator<progmem_iterator<value_type, mcal_progmem_uintptr_t, mcal_progmem_ptrdiff_t>>((mcal_progmem_uintptr_t) MCAL_PROGMEM_ADDRESSOF(c_array[0U])); }
 
   } } } // namespace mcal::memory::progmem
 
