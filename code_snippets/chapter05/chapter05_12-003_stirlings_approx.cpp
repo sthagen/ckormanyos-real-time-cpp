@@ -1,3 +1,10 @@
+///////////////////////////////////////////////////////////////////////////////
+//  Copyright Christopher Kormanyos 2019- 2020.
+//  Distributed under the Boost Software License,
+//  Version 1.0. (See accompanying file LICENSE_1_0.txt
+//  or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
 // chapter05_12-003_stirlings_approx.cpp
 
 #include <cmath>
@@ -14,7 +21,7 @@ constexpr T e =
   T(2.7182818284'5904523536'0287471352'6624977572L);
 
 template<typename T>
-T tgamma_order_1(T x)
+T tgamma_order_2(T x)
 {
   using std::pow;
   using std::sqrt;
@@ -29,7 +36,7 @@ T tgamma_order_1(T x)
                       * one_over_x))
                   / T(6.0L);
 
-  return pow ( x / e<T>, x) * (term0 + term1);
+  return pow(x / e<T>, x) * (term0 + term1);
 }
 
 int main()
@@ -38,10 +45,10 @@ int main()
     std::numeric_limits<float>::max_digits10;
 
   std::cout << std::setprecision(prec)
-            << tgamma_order_1(20.0F)
+            << tgamma_order_2(20.0F)
             << std::endl;
 }
 
-// Test tgamma_order_1(20.0F).
+// Test tgamma_order_2(20.0F).
 // Result:       1.21644237     e+17.
 // Compare with: 1.2164510041...e+17.

@@ -1,4 +1,12 @@
-.section .intvect, "ax"
+;///////////////////////////////////////////////////////////////////////////////
+;//  Copyright Christopher Kormanyos 2013 - 2020.
+;//  Distributed under the Boost Software License,
+;//  Version 1.0. (See accompanying file LICENSE_1_0.txt
+;//  or copy at http://www.boost.org/LICENSE_1_0.txt)
+;//
+
+
+.section .isr_vector, "ax"
 
 b __my_startup
 b __int_vect_undef_instr_handler

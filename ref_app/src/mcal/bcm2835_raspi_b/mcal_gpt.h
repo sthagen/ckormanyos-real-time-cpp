@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2014.
+//  Copyright Christopher Kormanyos 2007 - 2020.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -38,11 +38,6 @@
         template<typename unsigned_tick_type>
         friend class util::timer;
       };
-
-      namespace detail
-      {
-        void rpi_armtimer_interrupt_callback();
-      }
     }
   }
 

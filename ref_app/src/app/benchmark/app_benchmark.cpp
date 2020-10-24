@@ -75,6 +75,14 @@ void app::benchmark::task_func()
 
   const bool result_is_ok = app::benchmark::run_pi_spigot();
 
+  #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_PI_SPIGOT_SINGLE)
+
+  const bool result_is_ok = app::benchmark::run_pi_spigot_single();
+
+  #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_HASH)
+
+  const bool result_is_ok = app::benchmark::run_hash();
+
   #endif
 
   // Set the benchmark port pin level to low.
