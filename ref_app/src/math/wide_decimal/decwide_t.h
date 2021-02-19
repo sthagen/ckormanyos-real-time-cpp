@@ -435,7 +435,7 @@
         using std::frexp;
 
         // Get the fraction and base-2 exponent.
-        native_float_type man = frexp(f, &my_exponent_part);
+        native_float_type man = (native_float_type) frexp(f, &my_exponent_part);
 
         limb_type n2 = 0U;
 
@@ -2145,31 +2145,49 @@
       return static_cast<limb_type>(prev);
     }
 
-    static void mul_loop_karatsuba_n_by_n_to_2n(      limb_type*          r,
-                                                const limb_type*          a,
-                                                const limb_type*          b,
+    static void mul_loop_karatsuba_n_by_n_to_2n(      limb_type*         r,
+                                                const limb_type*         a,
+                                                const limb_type*         b,
                                                 const std::uint_fast32_t count)
     {
+      (void) r;
+      (void) a;
+      (void) b;
+      (void) count;
     }
 
     static void mul_loop_karatsuba_propagate_carry(limb_type* t, const std::uint_fast32_t n, const bool has_borrow)
     {
+      (void) t;
+      (void) n;
+      (void) has_borrow;
     }
 
     static void mul_loop_karatsuba_propagate_borrow(limb_type* t, const std::uint_fast32_t n, const bool has_borrow)
     {
+      (void) t;
+      (void) n;
+      (void) has_borrow;
     }
 
-    static void mul_loop_karatsuba_n_by_n_to_2n(      limb_type*          r,
-                                                const limb_type*          a,
-                                                const limb_type*          b,
+    static void mul_loop_karatsuba_n_by_n_to_2n(      limb_type*         r,
+                                                const limb_type*         a,
+                                                const limb_type*         b,
                                                 const std::uint_fast32_t n,
-                                                      limb_type*          t)
+                                                      limb_type*         t)
     {
+      (void) r;
+      (void) a;
+      (void) b;
+      (void) n;
+      (void) t;
     }
 
     static void mul_loop_karatsuba(limb_type* const u, const limb_type* const v, const std::int32_t prec_elems_for_multiply)
     {
+      (void) u;
+      (void) v;
+      (void) prec_elems_for_multiply;
     }
 
     static void mul_loop_fft(limb_type* const u, const limb_type* const v, const std::int32_t prec_elems_for_multiply)
@@ -3664,7 +3682,11 @@
   // Specialization of std::numeric_limits<decwide_t<MyDigits10, LimbType, AllocatorType, InternalFloatType>>.
   namespace std
   {
-    template <const std::int32_t MyDigits10, typename LimbType, typename AllocatorType, typename InternalFloatType> class numeric_limits<math::wide_decimal::decwide_t<MyDigits10, LimbType, AllocatorType, InternalFloatType>>
+    template<const std::int32_t MyDigits10,
+             typename LimbType,
+             typename AllocatorType,
+             typename InternalFloatType>
+    class numeric_limits<math::wide_decimal::decwide_t<MyDigits10, LimbType, AllocatorType, InternalFloatType>>
     {
     public:
       static constexpr bool                    is_specialized    = true;
