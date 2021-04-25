@@ -1,5 +1,6 @@
-
-# Companion code for the book "Real-Time C++".
+Companion code for the book Real-Time C++\
+[![Build Status](https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg)](https://github.com/ckormanyos/real-time-cpp/actions)
+==================
 
 This is the companion code
 for the book C.M. Kormanyos,
@@ -98,24 +99,27 @@ It is called [./ref_app/ref_app.atsln](./ref_app/ref_app.atsln).
 
 ### Build with Cross-Environment CMake
 
-TBD: Describe this more clearly and handle [issue #76](https://github.com/ckormanyos/real-time-cpp/issues/76).
-CMake files have also been created for each supported target.
+Cross-Environment CMake can build the reference application.
+For this purpose, CMake files have also been created for each supported target.
 
-Win+R, cmd, enter
-
-If VS variable is not set by default (default install), open Visual Studio Build Window
+Consider, for instance, building the reference application for the
+`avr`target with CMake. The pattern is shown below.
 
 ```C
 cd real-time-cpp
 mkdir build
 cd build
-cmake ../ref_app -DTARGET=host
-cmake --build . --config Debug --target ALL_BUILD
+cmake ../ref_app -DTRIPLE=avr -DTARGET=avr -DCMAKE_TOOLCHAIN_FILE=../ref_app/cmake/gcc-toolchain.cmake
+make -j ref_app
 ```
 
-OR...
-Following `*nix` pattern to build with `x86_64-w64-mingw32` from MSYS or Cygwin
-should work too.
+Switch from `avr` to, for instance, `bcm2835_raspi_b` or `stm32f446`
+to build for one of the supported ARM(R) targets such as
+RaspberryPi(R) Zero with ARM(R) 1176-JZF-S or
+ST Microelectronics(R) STM32F446 ARM(R) featuring Cortex(TM)-M4.
+
+Following the standard `*nix` pattern to build with `x86_64-w64-mingw32`
+or `host` from the MSYS or Cygwin console should work too.
 
 ## Target Details
 
@@ -230,6 +234,9 @@ exercises various target builds, example builds
 and benchmark builds/runs on Ubuntu or Windows-Latest
 using GNUmake, CMake or MSBuild
 depending on the particular OS/build/target configuration.
+
+### Build Status
+[![Build Status](https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg)](https://github.com/ckormanyos/real-time-cpp/actions)
 
 ## GNU GCC Compilers
 

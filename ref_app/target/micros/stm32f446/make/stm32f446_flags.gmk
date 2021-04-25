@@ -26,7 +26,8 @@ TGT_ALLFLAGS  = -O2                                                            \
                 -finline-functions                                             \
                 -finline-limit=32                                              \
                 -mno-unaligned-access                                          \
-                -mno-long-calls
+                -mno-long-calls                                                \
+                -Wno-psabi
 
 TGT_CFLAGS    = -std=c99                                                       \
                 -Wunsuffixed-float-constants                                   \
@@ -36,6 +37,14 @@ TGT_CXXFLAGS  = -std=c++11                                                     \
                 $(TGT_ALLFLAGS)
 
 TGT_INCLUDES  = -I$(PATH_APP)/util/STL
+#TGT_INCLUDES  =
+
+#TGT_INCLUDES := -IC:/Users/User/Documents/Ks/PC_Software/NumericalPrograms/ExtendedNumberTypes/cnl-main/include        \
+#                -I$(PATH_TOOLS_CC)/../arm-none-eabi/include/c++/$(GCC_VERSION)/arm-none-eabi/thumb/v7e_m_fp/hard
+
+#TGT_INCLUDES := -IC:/boost/modular_boost/boost/libs/math/include               \
+#                -IC:/boost/boost_1_76_0                                        \
+#                -I$(PATH_TOOLS_CC)/../arm-none-eabi/include/c++/$(GCC_VERSION)/arm-none-eabi/thumb/v7e_m_fp/hard
 
 TGT_AFLAGS    =
 
