@@ -1,6 +1,5 @@
-
 /*
- Copyright Christopher Kormanyos 2007 - 2018.
+ Copyright Christopher Kormanyos 2007 - 2021.
  Distributed under the Boost Software License,
  Version 1.0. (See accompanying file LICENSE_1_0.txt
  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -23,7 +22,7 @@ _stack_begin = 0x00800700;
 _stack_end   = 0x00800900;
 
 /* The initial stack pointer (top of stack) is at the top of the 2K RAM */
-__initial_stack_pointer = 0x008008FE;
+__initial_stack_pointer = 0x00800900 - 2;
 
 MEMORY
 {
@@ -76,7 +75,7 @@ SECTIONS
     . = ALIGN(0x10);
   } > ROM = 0xAAAA
 
-  .= 0x00800100;
+  . = 0x00800100;
   . = ALIGN(2);
 
   /* The ROM-to-RAM initialized data section */

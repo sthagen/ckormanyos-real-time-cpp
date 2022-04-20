@@ -15,14 +15,14 @@
 
 namespace
 {
-  using filter_type = fir_order_n<17U, 64U, std::int16_t, std::int32_t>;
+  using filter_type = math::filters::fir_order_n<17U, 64U, std::int16_t, std::int32_t>;
   using sample_type = filter_type::sample_type;
 }
 
 extern       filter_type f;
 extern const sample_type sample;
 
-bool app::benchmark::run_filter()
+auto app::benchmark::run_filter() -> bool
 {
   static std::uint_fast8_t sample_counter;
 

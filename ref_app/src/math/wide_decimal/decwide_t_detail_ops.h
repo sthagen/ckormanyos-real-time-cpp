@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 1999 - 2021.                 //
+//  Copyright Christopher Kormanyos 1999 - 2022.                 //
 //  Distributed under the Boost Software License,                //
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt          //
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)             //
@@ -14,8 +14,8 @@
 // (including Karatsuba and FFT loops), and division (but only
 // division by 1 limb).
 
-#ifndef DECWIDE_T_DETAIL_OPS_2021_04_12_H_
-  #define DECWIDE_T_DETAIL_OPS_2021_04_12_H_
+#ifndef DECWIDE_T_DETAIL_OPS_2021_04_12_H // NOLINT(llvm-header-guard)
+  #define DECWIDE_T_DETAIL_OPS_2021_04_12_H
 
   #include <cstdint>
   #include <iterator>
@@ -24,25 +24,38 @@
   #include <math/wide_decimal/decwide_t_detail.h>
   #include <math/wide_decimal/decwide_t_detail_fft.h>
 
-  namespace math { namespace wide_decimal { namespace detail {
+  WIDE_DECIMAL_NAMESPACE_BEGIN
+
+  #if(__cplusplus >= 201703L)
+  namespace math::wide_decimal::detail {
+  #else
+  namespace math { namespace wide_decimal { namespace detail { // NOLINT(modernize-concat-nested-namespaces)
+  #endif
 
   template<typename InputIteratorLeftType,
            typename InputIteratorRightType>
-  std::int_fast8_t compare_ranges(InputIteratorLeftType a,
-                                  InputIteratorRightType b,
-                                  const std::uint_fast32_t count)
+  auto compare_ranges(      InputIteratorLeftType  pa,
+                            InputIteratorRightType pb,
+                      const std::uint_fast32_t     count) -> std::int_fast8_t
   {
     std::int_fast8_t n_return = 0;
 
-    InputIteratorRightType it_b(b);
+    InputIteratorRightType it_a_end(pa + count);
 
-    for(InputIteratorLeftType it_a(a); it_a != InputIteratorLeftType(a + count); ++it_a, ++it_b)
+    while(pa != it_a_end)
     {
       using value_left_type =
         typename std::iterator_traits<InputIteratorLeftType>::value_type;
 
-      if     (*it_a > value_left_type(*it_b)) { n_return =  1; break; }
-      else if(*it_a < value_left_type(*it_b)) { n_return = -1; break; }
+      const auto value_a = *pa++;
+      const auto value_b = static_cast<value_left_type>(*pb++);
+
+      if(value_a != value_b)
+      {
+        n_return = static_cast<std::int_fast8_t>((value_a > value_b) ? INT8_C(1) : INT8_C(-1));
+
+        break;
+      }
     }
 
     return n_return;
@@ -50,22 +63,28 @@
 
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType>
-  typename std::iterator_traits<OutputLimbIteratorType>::value_type
-    eval_add_n(OutputLimbIteratorType r,
-               InputLimbIteratorType u,
-               InputLimbIteratorType v,
-               const std::int32_t count)
+  auto eval_add_n(      OutputLimbIteratorType r,
+                        InputLimbIteratorType  u,
+                        InputLimbIteratorType  v,
+                  const std::int32_t           count) -> typename std::iterator_traits<OutputLimbIteratorType>::value_type
   {
     using local_limb_type = typename std::iterator_traits<OutputLimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     // Addition algorithm
-    std::uint_fast8_t carry = static_cast<std::uint_fast8_t>(0U);
+    auto carry = static_cast<std::uint_fast8_t>(0U);
 
-    for(std::int32_t j = static_cast<std::int32_t>(count - static_cast<std::int32_t>(1)); j >= static_cast<std::int32_t>(0); --j)
+    for(auto   j  = static_cast<std::int32_t>(count - static_cast<std::int32_t>(1));
+               j >= static_cast<std::int32_t>(0);
+             --j)
     {
-      const local_limb_type t = static_cast<local_limb_type>(static_cast<local_limb_type>(u[j] + v[j]) + carry);
+      const auto t =
+        static_cast<local_limb_type>
+        (
+          static_cast<local_limb_type>(u[j] + v[j]) + carry
+        );
 
       carry = ((t >= static_cast<local_limb_type>(local_elem_mask)) ? static_cast<std::uint_fast8_t>(1U)
                                                                     : static_cast<std::uint_fast8_t>(0U));
@@ -79,25 +98,41 @@
 
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType>
-  bool eval_subtract_n(OutputLimbIteratorType r,
-                       InputLimbIteratorType u,
-                       InputLimbIteratorType v,
-                       const std::int32_t count)
+  auto eval_subtract_n(      OutputLimbIteratorType r,
+                             InputLimbIteratorType  u, // NOLINT(bugprone-easily-swappable-parameters)
+                             InputLimbIteratorType  v,
+                       const std::int32_t           count) -> bool
   {
     using local_limb_type        = typename std::iterator_traits<OutputLimbIteratorType>::value_type;
     using local_signed_limb_type = typename std::make_signed<local_limb_type>::type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     // Subtraction algorithm
-    std::uint_fast8_t borrow = static_cast<std::uint_fast8_t>(0U);
+    auto borrow = static_cast<std::uint_fast8_t>(0U);
 
-    for(std::uint32_t j = static_cast<std::uint32_t>(count - static_cast<std::int32_t>(1)); static_cast<std::int32_t>(j) >= static_cast<std::int32_t>(0); --j)
+    for(auto   j = static_cast<std::uint32_t>(count - static_cast<std::int32_t>(1));
+                   static_cast<std::int32_t>(j) >= static_cast<std::int32_t>(0);
+             --j)
     {
-      local_signed_limb_type t =
+      const auto vjb =
+        static_cast<local_limb_type>
+        (
+          v[j] + static_cast<local_limb_type>(borrow)
+        );
+
+      auto t =
         static_cast<local_signed_limb_type>
         (
-          local_limb_type(u[j] + local_limb_type(local_limb_type(~local_limb_type(local_limb_type(v[j] + local_limb_type(borrow)))) + 1U))
+          static_cast<local_limb_type>
+          (
+              u[j]
+            + static_cast<local_limb_type>
+              (
+                static_cast<local_limb_type>(~vjb) + static_cast<local_limb_type>(1U)
+              )
+          )
         );
 
       // Underflow? Borrow?
@@ -115,97 +150,116 @@
       r[j] = static_cast<local_limb_type>(t);
     }
 
-    return (borrow != 0U);
+    return (borrow != static_cast<std::uint_fast8_t>(0U));
   }
 
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType>
-  void eval_multiply_n_by_n_to_2n(
-    OutputLimbIteratorType r,
-    InputLimbIteratorType a,
-    InputLimbIteratorType b,
-    const std::int_fast32_t count,
-    const typename std::enable_if<(std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint8_t>::value == true)>::type* = nullptr)
+  void eval_multiply_n_by_n_to_2n
+  (
+          OutputLimbIteratorType  r,
+          InputLimbIteratorType   a,
+          InputLimbIteratorType   b,
+    const std::int_fast32_t       count,
+    const typename std::enable_if<std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint8_t>::value>::type* p_nullparam = nullptr
+  )
   {
+    static_cast<void>(p_nullparam);
+
     using local_limb_type = typename std::iterator_traits<OutputLimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     using local_double_limb_type =
-      typename std::conditional<(std::is_same<local_limb_type, std::uint32_t>::value == true),
-                                  std::uint64_t,
-                                  typename std::conditional<(std::is_same<local_limb_type, std::uint16_t>::value == true),
-                                                            std::uint32_t,
-                                                            std::uint16_t>::type>::type;
+      typename std::conditional<std::is_same<local_limb_type, std::uint32_t>::value,
+                                std::uint64_t,
+                                typename std::conditional<std::is_same<local_limb_type, std::uint16_t>::value,
+                                                          std::uint32_t,
+                                                          std::uint16_t>::type>::type;
 
-    std::fill(r, r + (count * 2), local_limb_type(0));
+    std::fill(r, r + (count * 2), static_cast<local_limb_type>(0));
 
-    for(std::int_fast32_t i = count - 1; i >= 0; --i)
+    for(auto   i = static_cast<std::int_fast32_t>(count - 1);
+               i >= static_cast<std::int_fast32_t>(0);
+             --i)
     {
-      std::int_fast32_t j = count - 1;
+      auto j = static_cast<std::int_fast32_t>(count - 1);
 
-      local_double_limb_type carry = 0U;
+      auto carry = static_cast<local_double_limb_type>(0U);
 
-      for( ; j >= 0; --j)
+      for( ; j >= static_cast<std::int_fast32_t>(0); --j)
       {
-        carry = local_double_limb_type(carry + local_double_limb_type(local_double_limb_type(a[i]) * b[j]));
-        carry = local_double_limb_type(carry + r[1 + (i + j)]);
+        carry = static_cast<local_double_limb_type>(carry + static_cast<local_double_limb_type>(static_cast<local_double_limb_type>(a[i]) * b[j]));
+        carry = static_cast<local_double_limb_type>(carry + r[1 + (i + j)]);
 
         r[1 + (i + j)] = static_cast<local_limb_type>       (carry % local_elem_mask);
         carry          = static_cast<local_double_limb_type>(carry / local_elem_mask);
       }
 
-      r[1 + i + j] = local_limb_type(carry);
+      r[1 + i + j] = static_cast<local_limb_type>(carry);
     }
   }
 
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType>
-  void eval_multiply_n_by_n_to_2n(
-    OutputLimbIteratorType r,
-    InputLimbIteratorType a,
-    InputLimbIteratorType b,
-    const std::int_fast32_t count,
-    const typename std::enable_if<(   (std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint16_t>::value == true)
-                                   || (std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint32_t>::value == true))>::type* = nullptr)
+  void eval_multiply_n_by_n_to_2n
+  (
+          OutputLimbIteratorType r,
+          InputLimbIteratorType  a,
+          InputLimbIteratorType  b,
+    const std::int_fast32_t      count,
+    const typename std::enable_if<(   std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint16_t>::value
+                                   || std::is_same<typename std::iterator_traits<OutputLimbIteratorType>::value_type, std::uint32_t>::value)>::type* p_nullparam = nullptr)
   {
+    static_cast<void>(p_nullparam);
+
     using local_limb_type = typename std::iterator_traits<OutputLimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     using local_double_limb_type =
-      typename std::conditional<(std::is_same<local_limb_type, std::uint32_t>::value == true),
-                                 std::uint64_t,
-                                 typename std::conditional<(std::is_same<local_limb_type, std::uint16_t>::value == true),
-                                                            std::uint32_t,
-                                                            std::uint16_t>::type>::type;
+      typename std::conditional<std::is_same<local_limb_type, std::uint32_t>::value,
+                                std::uint64_t,
+                                typename std::conditional<std::is_same<local_limb_type, std::uint16_t>::value,
+                                                          std::uint32_t,
+                                                          std::uint16_t>::type>::type;
 
     using local_reverse_iterator_type = std::reverse_iterator<local_limb_type*>;
 
-    local_reverse_iterator_type ir(r + (count * 2));
+    const auto r_range =
+      static_cast<std::size_t>
+      (
+        count * static_cast<std::int_fast32_t>(INT8_C(2))
+      );
 
-    local_double_limb_type carry = 0U;
+    local_reverse_iterator_type ir(r + r_range);
 
-    for(std::int32_t j = static_cast<std::int32_t>(count - 1); j >= static_cast<std::int32_t>(1); --j)
+    auto carry = static_cast<local_double_limb_type>(0U);
+
+    for(auto j = static_cast<std::int32_t>(count - 1); j >= static_cast<std::int32_t>(1); --j)
     {
-      local_double_limb_type sum = carry;
+      auto sum = carry;
 
-      for(std::int32_t i = static_cast<std::int32_t>(count - 1); i >= j; --i)
+      for(auto i = static_cast<std::int32_t>(count - 1); i >= j; --i)
       {
-        sum += local_double_limb_type(
-                  local_double_limb_type(a[i]) * b[  static_cast<std::int32_t>(count - 1)
-                                                   - static_cast<std::int32_t>(i - j)]);
+        sum += static_cast<local_double_limb_type>
+               (
+                 static_cast<local_double_limb_type>(a[i]) * b[  static_cast<std::int32_t>(count - 1)
+                                                               - static_cast<std::int32_t>(i - j)]
+               );
       }
 
       carry = static_cast<local_double_limb_type>(sum / local_elem_mask);
       *ir++ = static_cast<local_limb_type>       (sum % local_elem_mask);
     }
 
-    for(std::int32_t j = static_cast<std::int32_t>(count - 1); j >= static_cast<std::int32_t>(0); --j)
+    for(auto j = static_cast<std::int32_t>(count - 1); j >= static_cast<std::int32_t>(0); --j)
     {
-      local_double_limb_type sum = carry;
+      auto sum = carry;
 
-      for(std::int32_t i = j; i >= static_cast<std::int32_t>(0); --i)
+      for(auto i = j; i >= static_cast<std::int32_t>(0); --i)
       {
         sum += static_cast<local_double_limb_type>(a[j - i] * static_cast<local_double_limb_type>(b[i]));
       }
@@ -218,31 +272,33 @@
   }
 
   template<typename LimbIteratorType>
-  typename std::iterator_traits<LimbIteratorType>::value_type mul_loop_n(
-    LimbIteratorType u,
-    typename std::iterator_traits<LimbIteratorType>::value_type n,
-    const std::int32_t p)
+  auto mul_loop_n(      LimbIteratorType                                            u,
+                        typename std::iterator_traits<LimbIteratorType>::value_type n,
+                  const std::int32_t                                                p) -> typename std::iterator_traits<LimbIteratorType>::value_type
   {
     using local_limb_type = typename std::iterator_traits<LimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     using local_double_limb_type =
-      typename std::conditional<(std::is_same<local_limb_type, std::uint32_t>::value == true),
-                                 std::uint64_t,
-                                 typename std::conditional<(std::is_same<local_limb_type, std::uint16_t>::value == true),
-                                                            std::uint32_t,
-                                                            std::uint16_t>::type>::type;
+      typename std::conditional<std::is_same<local_limb_type, std::uint32_t>::value,
+                                std::uint64_t,
+                                typename std::conditional<std::is_same<local_limb_type, std::uint16_t>::value,
+                                                          std::uint32_t,
+                                                          std::uint16_t>::type>::type;
 
-    local_limb_type carry = 0U;
+    auto carry = static_cast<local_limb_type>(0U);
 
     // Multiplication loop.
-    for(std::int32_t j = static_cast<std::int32_t>(p - 1); j >= static_cast<std::int32_t>(0); --j)
+    for(auto j = static_cast<std::int32_t>(p - 1); j >= static_cast<std::int32_t>(0); --j)
     {
-      const local_double_limb_type t =
-        static_cast<local_double_limb_type>(
+      const auto t =
+        static_cast<local_double_limb_type>
+        (
             carry
-          + static_cast<local_double_limb_type>(static_cast<local_double_limb_type>(u[j]) * n));
+          + static_cast<local_double_limb_type>(static_cast<local_double_limb_type>(u[j]) * n)
+        );
 
       carry = static_cast<local_limb_type>(t / local_elem_mask);
       u[j]  = static_cast<local_limb_type>(t % local_elem_mask);
@@ -252,30 +308,32 @@
   }
 
   template<typename LimbIteratorType>
-  typename std::iterator_traits<LimbIteratorType>::value_type div_loop_n(
-    LimbIteratorType u,
-    typename std::iterator_traits<LimbIteratorType>::value_type n,
-    const std::int32_t p)
+  auto div_loop_n(      LimbIteratorType                                            u,
+                        typename std::iterator_traits<LimbIteratorType>::value_type n,
+                  const std::int32_t                                                p) -> typename std::iterator_traits<LimbIteratorType>::value_type
   {
     using local_limb_type = typename std::iterator_traits<LimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     using local_double_limb_type =
-      typename std::conditional<(std::is_same<local_limb_type, std::uint32_t>::value == true),
-                                 std::uint64_t,
-                                 typename std::conditional<(std::is_same<local_limb_type, std::uint16_t>::value == true),
-                                                            std::uint32_t,
-                                                            std::uint16_t>::type>::type;
+      typename std::conditional<std::is_same<local_limb_type, std::uint32_t>::value,
+                                std::uint64_t,
+                                typename std::conditional<std::is_same<local_limb_type, std::uint16_t>::value,
+                                                          std::uint32_t,
+                                                          std::uint16_t>::type>::type;
 
-    local_limb_type prev = 0U;
+    auto prev = static_cast<local_limb_type>(0U);
 
-    for(std::int32_t j = static_cast<std::int32_t>(0); j < p; ++j)
+    for(auto j = static_cast<std::int32_t>(0); j < p; ++j)
     {
-      const local_double_limb_type t =
-        static_cast<local_double_limb_type>(
+      const auto t =
+        static_cast<local_double_limb_type>
+        (
             u[j]
-          + static_cast<local_double_limb_type>(static_cast<local_double_limb_type>(prev) * local_elem_mask));
+          + static_cast<local_double_limb_type>(static_cast<local_double_limb_type>(prev) * local_elem_mask)
+        );
 
       u[j] = static_cast<local_limb_type>(t / n);
       prev = static_cast<local_limb_type>(t % n);
@@ -285,14 +343,14 @@
   }
 
   template<typename LimbIteratorType>
-  void eval_multiply_kara_propagate_carry(
-    LimbIteratorType t,
-    const std::uint_fast32_t n,
-    const typename std::iterator_traits<LimbIteratorType>::value_type carry)
+  auto eval_multiply_kara_propagate_carry(      LimbIteratorType                                            t,
+                                          const std::uint_fast32_t                                          n,
+                                          const typename std::iterator_traits<LimbIteratorType>::value_type carry) -> void
   {
     using local_limb_type = typename std::iterator_traits<LimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
     std::uint_fast8_t carry_out = ((carry != 0U) ? static_cast<std::uint_fast8_t>(1U)
                                                  : static_cast<std::uint_fast8_t>(0U));
@@ -304,7 +362,7 @@
 
     while((carry_out != 0U) && (ri_t != rend_t))
     {
-      const local_limb_type tt = local_limb_type(*ri_t + local_limb_type(carry_out));
+      const auto tt = static_cast<local_limb_type>(*ri_t + static_cast<local_limb_type>(carry_out));
 
       carry_out = ((tt >= local_elem_mask) ? static_cast<std::uint_fast8_t>(1U)
                                            : static_cast<std::uint_fast8_t>(0U));
@@ -315,32 +373,35 @@
   }
 
   template<typename LimbIteratorType>
-  void eval_multiply_kara_propagate_borrow(
-    LimbIteratorType t,
-    const std::uint_fast32_t n,
-    const bool has_borrow)
+  auto eval_multiply_kara_propagate_borrow(      LimbIteratorType   t,
+                                           const std::uint_fast32_t n,
+                                           const bool               has_borrow) -> void
   {
     using local_limb_type = typename std::iterator_traits<LimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask = decwide_t_helper_base<local_limb_type>::elem_mask;
+    constexpr auto local_elem_mask =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask);
 
-    std::int_fast8_t borrow = (has_borrow ? static_cast<std::int_fast8_t>(1)
-                                          : static_cast<std::int_fast8_t>(0));
+    auto borrow =
+      static_cast<std::int_fast8_t>
+      (
+        (has_borrow ? static_cast<std::int_fast8_t>(1)
+                    : static_cast<std::int_fast8_t>(0))
+      );
 
     using local_reverse_iterator_type = std::reverse_iterator<LimbIteratorType>;
 
     local_reverse_iterator_type ri_t  (t + n);
     local_reverse_iterator_type rend_t(t);
 
-    while((borrow != 0) && (ri_t != rend_t))
+    while((borrow != static_cast<std::int_fast8_t>(0)) && (ri_t != rend_t))
     {
       using local_signed_limb_type = typename std::make_signed<local_limb_type>::type;
 
-      local_signed_limb_type tt =
-        static_cast<local_signed_limb_type>(static_cast<local_signed_limb_type>(*ri_t) - borrow);
+      auto tt = static_cast<local_signed_limb_type>(static_cast<local_signed_limb_type>(*ri_t) - borrow);
 
       // Underflow? Borrow?
-      if(tt < 0)
+      if(tt < static_cast<local_signed_limb_type>(0))
       {
         // Yes, underflow and borrow
         tt     = static_cast<local_signed_limb_type>(tt + static_cast<local_signed_limb_type>(local_elem_mask));
@@ -358,13 +419,13 @@
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType,
            typename TempLimbIteratorType>
-  void eval_multiply_kara_n_by_n_to_2n(OutputLimbIteratorType r,
-                                       InputLimbIteratorType a,
-                                       InputLimbIteratorType b,
-                                       const std::uint_fast32_t n,
-                                       TempLimbIteratorType t)
+  auto eval_multiply_kara_n_by_n_to_2n(      OutputLimbIteratorType r, // NOLINT(misc-no-recursion)
+                                             InputLimbIteratorType  a,
+                                             InputLimbIteratorType  b,
+                                       const std::uint_fast32_t     n,
+                                             TempLimbIteratorType   t) -> void
   {
-    if(n <= 32U)
+    if(n <= 32U) // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
     {
       static_cast<void>(t);
 
@@ -451,11 +512,11 @@
       // Step 4
       const std::int_fast8_t cmp_result_b0b1 = detail::compare_ranges(b0, b1, nh);
 
-      if(cmp_result_b0b1 == 1)
+      if(cmp_result_b0b1 == static_cast<std::int_fast8_t>(1))
       {
         static_cast<void>(detail::eval_subtract_n(t1, b0, b1, static_cast<std::int32_t>(nh)));
       }
-      else if(cmp_result_b0b1 == -1)
+      else if(cmp_result_b0b1 == static_cast<std::int_fast8_t>(-1))
       {
         static_cast<void>(detail::eval_subtract_n(t1, b1, b0, static_cast<std::int32_t>(nh)));
       }
@@ -470,7 +531,7 @@
 
         eval_multiply_kara_propagate_carry(r0, nh, carry);
       }
-      else if((cmp_result_a1a0 * cmp_result_b0b1) == -1)
+      else if(static_cast<std::int_fast8_t>(cmp_result_a1a0 * cmp_result_b0b1) == static_cast<std::int_fast8_t>(-1))
       {
         const bool has_borrow = detail::eval_subtract_n(r1, r1, t2, static_cast<std::int32_t>(n));
 
@@ -482,31 +543,34 @@
   template<typename InputLimbIteratorType,
            typename OutputLimbIteratorType,
            typename FftFloatIteratorType>
-  void mul_loop_fft(OutputLimbIteratorType r,
-                    InputLimbIteratorType u,
-                    InputLimbIteratorType v,
-                    FftFloatIteratorType af,
-                    FftFloatIteratorType bf,
-                    const std::int32_t prec_elems_for_multiply,
-                    const std::uint32_t n_fft)
+  auto mul_loop_fft(      OutputLimbIteratorType r,
+                          InputLimbIteratorType  u, // NOLINT(bugprone-easily-swappable-parameters)
+                          InputLimbIteratorType  v,
+                          FftFloatIteratorType   af,
+                          FftFloatIteratorType   bf,
+                    const std::int32_t           prec_elems_for_multiply,
+                    const std::uint32_t          n_fft) -> void
   {
     using local_limb_type = typename std::iterator_traits<OutputLimbIteratorType>::value_type;
 
-    constexpr local_limb_type local_elem_mask_half = decwide_t_helper_base<local_limb_type>::elem_mask_half;
+    constexpr auto local_elem_mask_half =
+      static_cast<local_limb_type>(decwide_t_helper_base<local_limb_type>::elem_mask_half);
 
     using local_fft_float_type = typename std::iterator_traits<FftFloatIteratorType>::value_type;
 
-    for(std::uint32_t i = static_cast<std::uint32_t>(0U); i < static_cast<std::uint32_t>(prec_elems_for_multiply); ++i)
+    for(auto   i = static_cast<std::uint32_t>(0U);
+               i < static_cast<std::uint32_t>(prec_elems_for_multiply);
+             ++i)
     {
-      af[(i * 2U)]      = local_fft_float_type(u[i] / local_elem_mask_half);
-      af[(i * 2U) + 1U] = local_fft_float_type(u[i] % local_elem_mask_half);
+      af[ i * 2U]       = static_cast<local_fft_float_type>(u[i] / local_elem_mask_half); // NOLINT(bugprone-integer-division)
+      af[(i * 2U) + 1U] = static_cast<local_fft_float_type>(u[i] % local_elem_mask_half);
 
-      bf[(i * 2U)]      = local_fft_float_type(v[i] / local_elem_mask_half);
-      bf[(i * 2U) + 1U] = local_fft_float_type(v[i] % local_elem_mask_half);
+      bf[ i * 2U]       = static_cast<local_fft_float_type>(v[i] / local_elem_mask_half); // NOLINT(bugprone-integer-division)
+      bf[(i * 2U) + 1U] = static_cast<local_fft_float_type>(v[i] % local_elem_mask_half);
     }
 
-    std::fill(af + (2 * prec_elems_for_multiply), af + n_fft, local_fft_float_type(0));
-    std::fill(bf + (2 * prec_elems_for_multiply), bf + n_fft, local_fft_float_type(0));
+    std::fill(af + (2 * prec_elems_for_multiply), af + n_fft, static_cast<local_fft_float_type>(0));
+    std::fill(bf + (2 * prec_elems_for_multiply), bf + n_fft, static_cast<local_fft_float_type>(0));
 
     // Perform forward FFTs on the data arrays a and b.
     detail::fft::rfft_lanczos_rfft<local_fft_float_type, true>(n_fft, af);
@@ -517,7 +581,7 @@
     af[0U] *= bf[0U];
     af[1U] *= bf[1U];
 
-    for(std::uint32_t j = static_cast<std::uint32_t>(2U); j < n_fft; j += 2U)
+    for(auto j = static_cast<std::uint32_t>(2U); j < n_fft; j += 2U)
     {
       const local_fft_float_type tmp_aj = af[j];
 
@@ -533,24 +597,34 @@
     // to the result of multiplication.
     using fft_carry_type = std::uint_fast64_t;
 
-    fft_carry_type carry = static_cast<fft_carry_type>(0U);
+    auto carry = static_cast<fft_carry_type>(0U);
 
-    for(std::uint32_t j = static_cast<std::uint32_t>((prec_elems_for_multiply * 2L) - 2L); static_cast<std::int32_t>(j) >= 0; j -= 2U)
+    for(auto j = static_cast<std::uint32_t>((prec_elems_for_multiply * 2L) - 2L);
+                 static_cast<std::int32_t>(j) >= static_cast<std::int32_t>(0);
+             j -= 2U)
     {
-      local_fft_float_type  xaj = af[j] / (n_fft / 2U);
-      const fft_carry_type  xlo = static_cast<fft_carry_type> (xaj + detail::fft::template_half<local_fft_float_type>()) + carry;
-      carry                     = static_cast<fft_carry_type> (xlo / local_elem_mask_half);
-      const local_limb_type nlo = static_cast<local_limb_type>(xlo - static_cast<fft_carry_type>(carry * local_elem_mask_half));
+            auto xaj   = static_cast<local_fft_float_type>(af[j] / (n_fft / 2U)); // NOLINT(bugprone-integer-division)
+      const auto xlo   = static_cast<fft_carry_type> (xaj + detail::fft::template_half<local_fft_float_type>()) + carry;
+                 carry = static_cast<fft_carry_type> (xlo / local_elem_mask_half);
+      const auto nlo   = static_cast<local_limb_type>(xlo - static_cast<fft_carry_type>(carry * local_elem_mask_half));
 
-                            xaj = ((j != 0) ? (af[j - 1U] / (n_fft / 2U)) : local_fft_float_type(0));
-      const fft_carry_type  xhi = static_cast<fft_carry_type> (xaj + detail::fft::template_half<local_fft_float_type>()) + carry;
-      carry                     = static_cast<fft_carry_type> (xhi / local_elem_mask_half);
-      const local_limb_type nhi = static_cast<local_limb_type>(xhi - static_cast<fft_carry_type>(carry * local_elem_mask_half));
+                 xaj   = ((j != 0) ? static_cast<local_fft_float_type>(af[j - 1U] / (n_fft / 2U)) : static_cast<local_fft_float_type>(0)); // NOLINT(bugprone-integer-division)
+      const auto xhi   = static_cast<fft_carry_type> (xaj + detail::fft::template_half<local_fft_float_type>()) + carry;
+                 carry = static_cast<fft_carry_type> (xhi / local_elem_mask_half);
+      const auto nhi   = static_cast<local_limb_type>(xhi - static_cast<fft_carry_type>(carry * local_elem_mask_half));
 
-      r[(j / 2U)] = static_cast<local_limb_type>(static_cast<local_limb_type>(nhi * local_elem_mask_half) + nlo);
+      r[j / 2U] = static_cast<local_limb_type>(static_cast<local_limb_type>(nhi * local_elem_mask_half) + nlo);
     }
   }
 
-  } } }
+  #if(__cplusplus >= 201703L)
+  } // namespace math::wide_decimal::detail
+  #else
+  } // namespace detail
+  } // namespace wide_decimal
+  } // namespace math
+  #endif
 
-#endif // DECWIDE_T_DETAIL_OPS_2021_04_12_H_
+  WIDE_DECIMAL_NAMESPACE_END
+
+#endif // DECWIDE_T_DETAIL_OPS_2021_04_12_H

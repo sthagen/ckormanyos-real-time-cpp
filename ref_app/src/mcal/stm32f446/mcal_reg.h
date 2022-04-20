@@ -1,5 +1,5 @@
-///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2019.
+﻿///////////////////////////////////////////////////////////////////////////////
+//  Copyright Christopher Kormanyos 2007 - 2022.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,9 +17,6 @@
       // Global base addresses.
       constexpr std::uint32_t periph_base     = UINT32_C(0x40000000);
       constexpr std::uint32_t scs_base        = UINT32_C(0xE000E000);
-
-      // System tick base address.
-      constexpr std::uint32_t stk_base        = UINT32_C(0xE000E010);
 
       // Individual unit base addresses.
       constexpr std::uint32_t scb_base        = scs_base        + UINT32_C(0x00000D00);

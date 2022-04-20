@@ -1,5 +1,5 @@
-///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2021.
+﻿///////////////////////////////////////////////////////////////////////////////
+//  Copyright Christopher Kormanyos 2007 - 2022.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8,23 +8,24 @@
 #ifndef APP_BENCHMARK_2018_10_02_H_
   #define APP_BENCHMARK_2018_10_02_H_
 
-  #define APP_BENCHMARK_TYPE_NONE                  0
-  #define APP_BENCHMARK_TYPE_COMPLEX               1
-  #define APP_BENCHMARK_TYPE_CRC                   2
-  #define APP_BENCHMARK_TYPE_FAST_MATH             3
-  #define APP_BENCHMARK_TYPE_FILTER                4
-  #define APP_BENCHMARK_TYPE_FIXED_POINT           5
-  #define APP_BENCHMARK_TYPE_FLOAT                 6
-  #define APP_BENCHMARK_TYPE_WIDE_INTEGER          7
-  #define APP_BENCHMARK_TYPE_PI_SPIGOT             8
-  #define APP_BENCHMARK_TYPE_PI_SPIGOT_SINGLE      9
-  #define APP_BENCHMARK_TYPE_HASH                 10
-  #define APP_BENCHMARK_TYPE_WIDE_DECIMAL         11
-  #define APP_BENCHMARK_TYPE_TRAPEZOID_INTEGRAL   12
-  #define APP_BENCHMARK_TYPE_PI_AGM               13
-  #define APP_BENCHMARK_TYPE_BOOST_MATH_CBRT      14
-  #define APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER   15
-  #define APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1     16
+  #define APP_BENCHMARK_TYPE_NONE                                0
+  #define APP_BENCHMARK_TYPE_COMPLEX                             1
+  #define APP_BENCHMARK_TYPE_CRC                                 2
+  #define APP_BENCHMARK_TYPE_FAST_MATH                           3
+  #define APP_BENCHMARK_TYPE_FILTER                              4
+  #define APP_BENCHMARK_TYPE_FIXED_POINT                         5
+  #define APP_BENCHMARK_TYPE_FLOAT                               6
+  #define APP_BENCHMARK_TYPE_WIDE_INTEGER                        7
+  #define APP_BENCHMARK_TYPE_PI_SPIGOT                           8
+  #define APP_BENCHMARK_TYPE_PI_SPIGOT_SINGLE                    9
+  #define APP_BENCHMARK_TYPE_HASH                               10
+  #define APP_BENCHMARK_TYPE_WIDE_DECIMAL                       11
+  #define APP_BENCHMARK_TYPE_TRAPEZOID_INTEGRAL                 12
+  #define APP_BENCHMARK_TYPE_PI_AGM                             13
+  #define APP_BENCHMARK_TYPE_BOOST_MATH_CBRT_TGAMMA             14
+  #define APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER                 15
+  #define APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1                   16
+  #define APP_BENCHMARK_TYPE_BOOST_MULTIPRECISION_CBRT          17
 
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_NONE
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_COMPLEX
@@ -40,9 +41,10 @@
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_WIDE_DECIMAL
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_TRAPEZOID_INTEGRAL
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_PI_AGM
-  //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_BOOST_MATH_CBRT
+  //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_BOOST_MATH_CBRT_TGAMMA
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER
   //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1
+  //#define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_BOOST_MULTIPRECISION_CBRT
 
   #if !defined(APP_BENCHMARK_TYPE)
   #define APP_BENCHMARK_TYPE   APP_BENCHMARK_TYPE_NONE
@@ -51,40 +53,43 @@
   namespace app { namespace benchmark {
 
   #if  (APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_NONE)
-  // none
-  bool run_none();
+  auto run_none() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_COMPLEX)
-  bool run_complex();
+  auto run_complex() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_CRC)
-  bool run_crc();
+  auto run_crc() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_FAST_MATH)
-  bool run_fast_math();
+  auto run_fast_math() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_FILTER)
-  bool run_filter();
+  auto run_filter() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_FIXED_POINT)
-  bool run_fixed_point();
+  auto run_fixed_point() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_FLOAT)
-  bool run_float();
+  auto run_float() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_WIDE_INTEGER)
-  bool run_wide_integer();
+  auto run_wide_integer() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_PI_SPIGOT)
-  bool run_pi_spigot();
+  auto run_pi_spigot() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_PI_SPIGOT_SINGLE)
-  bool run_pi_spigot_single();
+  auto run_pi_spigot_single() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_HASH)
-  bool run_hash();
+  auto run_hash() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_WIDE_DECIMAL)
-  bool run_wide_decimal();
+  auto run_wide_decimal() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_TRAPEZOID_INTEGRAL)
-  bool run_trapezoid_integral();
+  auto run_trapezoid_integral() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_PI_AGM)
-  bool run_pi_agm();
-  #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_BOOST_MATH_CBRT)
-  bool run_boost_math_cbrt();
+  auto run_pi_agm() -> bool;
+  #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_BOOST_MATH_CBRT_TGAMMA)
+  auto run_boost_math_cbrt_tgamma() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER)
-  bool run_cnl_scaled_integer();
+  auto run_cnl_scaled_integer() -> bool;
   #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1)
-  bool run_soft_double_h2f1();
+  auto run_soft_double_h2f1() -> bool;
+  #elif(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_BOOST_MULTIPRECISION_CBRT)
+  auto run_boost_multiprecision_cbrt() -> bool;
+  #else
+  #error APP_BENCHMARK_TYPE is undefined.
   #endif
 
   } } // namespace app:::benchmark

@@ -1,19 +1,23 @@
-#
-#  Copyright Christopher Kormanyos 2007 - 2020.
+﻿#
+#  Copyright Christopher Kormanyos 2007 - 2022.
 #  Distributed under the Boost Software License,
 #  Version 1.0. (See accompanying file LICENSE_1_0.txt
 #  or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
 # ------------------------------------------------------------------------------
-# 
+#
 # Makefile
 #
 # Build file for the reference application using the GNU tools
 #
-# Based on GNU Make 3.81
+# Based on GNU Make 4.2.1
 #
 # 07-April-2010
+#
+# See also a definitive list of GCC command line options
+# (for numerous target systems) here:
+#   https://man7.org/linux/man-pages/man1/gcc.1.html
 #
 # ------------------------------------------------------------------------------
 
@@ -42,7 +46,6 @@ PATH_ERR             = $(PATH_TMP)/err
 # standard shell tools
 # ------------------------------------------------------------------------------
 
-CP        = cp
 ECHO      = echo
 MAKE      = make
 MKDIR     = mkdir
@@ -133,6 +136,7 @@ WARN_FLAGS =  -Wall                             \
               -pedantic                         \
               -Wmain                            \
               -Wundef                           \
+              -Wconversion                      \
               -Wsign-conversion                 \
               -Wunused-parameter                \
               -Wuninitialized                   \
@@ -150,6 +154,7 @@ endif
 
 GCCFLAGS    = -g                                \
               $(WARN_FLAGS)                     \
+              -Wno-comment                      \
               -gdwarf-2                         \
               -fno-exceptions                   \
               -ffunction-sections               \
@@ -164,11 +169,10 @@ CXXFLAGS    = $(GCCFLAGS)                       \
               -x c++                            \
               -fno-rtti                         \
               -fno-use-cxa-atexit               \
-              -fno-exceptions                   \
               -fno-nonansi-builtins             \
               -fno-threadsafe-statics           \
               -fno-enforce-eh-specs             \
-              -ftemplate-depth=32               \
+              -ftemplate-depth=128              \
               -Wzero-as-null-pointer-constant
 
 AFLAGS      = $(GCCFLAGS)                       \
@@ -277,18 +281,27 @@ endif
 # create hex mask
 # ------------------------------------------------------------------------------
 $(APP)_flash.hex : $(APP).$(TGT_SUFFIX)
+	@-$(ECHO) +++ creating hex module: $(APP).$(TGT_SUFFIX)
+ifeq ($(TGT_SUFFIX),elf)
 	@-$(ECHO) +++ creating hex module: $(APP).hex.
 	@-$(OBJCOPY) $(APP).$(TGT_SUFFIX) -O ihex $(APP).hex
-	@-$(OBJCOPY) $(APP).$(TGT_SUFFIX) -O binary $(APP).bin
+	@-$(ECHO) +++ creating srec module: $(APP).s19
+	@-$(OBJCOPY) $(APP).$(TGT_SUFFIX) -O srec --srec-forceS3 --srec-len=16 $(APP).s19
+else
+	@-$(ECHO) +++ creating hex module disabled for non-ELF absolute objet file.
+endif
 ifeq ($(RULE_SPECIAL_MAKE_IMAGE_FILE),)
-	@-$(ECHO) +++ creating binary file
-	@-$(OBJCOPY) $(APP).$(TGT_SUFFIX) -O binary $(IMAGE_FILE)
+	@-$(ECHO) +++ creating special image file
+	@-$(ECHO) +++ disabled because there is no special image file
 else
 	@-$(ECHO) +++ creating special image file
 	@-$(RULE_SPECIAL_MAKE_IMAGE_FILE)
 endif
-ifneq ($(RULE_SPECIAL_MAKE_FLASH_BATCH),)
-	@-$(ECHO) +++ creating flash batch file
+ifeq ($(RULE_SPECIAL_MAKE_FLASH_BATCH),)
+	@-$(ECHO) +++ creating special flash batch file
+	@-$(ECHO) +++ disabled because there is no special flash batch file
+else
+	@-$(ECHO) +++ creating special flash batch file
 	@-$(RULE_SPECIAL_MAKE_FLASH_BATCH)
 endif
 

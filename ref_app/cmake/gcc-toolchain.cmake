@@ -110,6 +110,7 @@ set(GCCFLAGS
     -Winit-self
     -Wfloat-equal
     -Wdouble-promotion
+    -Wno-comment
     -gdwarf-2
     -fno-exceptions
     -ffunction-sections
@@ -126,7 +127,6 @@ set(_CXXFLAGS ${GCCFLAGS}
     -x c++
     -fno-rtti
     -fno-use-cxa-atexit
-    -fno-exceptions
     -fno-nonansi-builtins
     -fno-threadsafe-statics
     -fno-enforce-eh-specs
@@ -149,6 +149,7 @@ set(PARSE_SYMBOL_OPTIONS --print-size)
 # Postbuild binutil commands
 set(POSTBUILD_GEN_SYMBOL_LISTING ${READELF} --syms ${APP}${CMAKE_EXECUTABLE_SUFFIX} > ${APP}_readelf.txt)
 set(POSTBUILD_GEN_HEX ${OBJCOPY} -O ihex ${APP}${CMAKE_EXECUTABLE_SUFFIX} ${APP}.hex)
+set(POSTBUILD_GEN_S19 ${OBJCOPY} -O srec --srec-forceS3 --srec-len=16 ${APP}${CMAKE_EXECUTABLE_SUFFIX} ${APP}.s19)
 set(POSTBUILD_GEN_BIN ${OBJCOPY} -S -O binary ${APP}${CMAKE_EXECUTABLE_SUFFIX} ${APP}.bin)
 
 # Install Files

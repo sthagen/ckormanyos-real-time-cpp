@@ -13,10 +13,6 @@
 
 //#define APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE
 
-#if !defined (APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE)
-#define SOFT_DOUBLE_DISABLE_IOSTREAM
-#endif
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -24,7 +20,11 @@
 #include <limits>
 #include <numeric>
 
-#if !defined (APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE)
+#if defined (APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE)
+#include <util/STL_C++XX_stdfloat/cstdfloat>
+#else
+#define SOFT_DOUBLE_DISABLE_IOSTREAM
+
 #include <math/softfloat/soft_double.h>
 #endif
 
@@ -168,28 +168,33 @@ namespace local
     // by the ratio of the final recursions of A and B.
     return A.back() / B.back();
   }
-}
 
-bool app::benchmark::run_soft_double_h2f1()
-{
   #if defined (APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE)
-  using float64_t = double;
+  using std::float64_t;
   #else
-  using float64_t = math::softfloat::float64_t;
+  using math::softfloat::float64_t;
   #endif
+} // namespace local
 
-  static_assert(std::numeric_limits<float64_t>::digits >= 53, "Error: incorrect float64_t type definition");
+auto app::benchmark::run_soft_double_h2f1() -> bool
+{
+  using local::float64_t;
+
+  static_assert(std::numeric_limits<float64_t>::digits >= 53,
+                "Error: Incorrect float64_t type definition");
 
   const float64_t a( float64_t(2U) / 3U);
   const float64_t b( float64_t(4U) / 3U);
   const float64_t c( float64_t(5U) / 7U);
   const float64_t z(-float64_t(3U) / 4U);
 
-  const float64_t h2f1 = local::hypergeometric_2f1(a, b, c, z);
+  using local::hypergeometric_2f1;
+
+  const float64_t h2f1 = hypergeometric_2f1(a, b, c, z);
 
   // N[Hypergeometric2F1[2/3, 4/3, 5/7, -3/4], 41]
   #if defined (APP_BENCHMARK_TYPE_SOFT_DOUBLE_H2F1_USES_BUILTIN_DOUBLE)
-  const float64_t control = 0.50100473608761064038202987077811306637010;
+  const float64_t control = float64_t(FLOATMAX_C(0.50100473608761064038202987077811306637010));
   #else
   const float64_t control(UINT64_C(0x3FE0083B15946592), math::softfloat::detail::nothing());
   #endif
@@ -197,8 +202,9 @@ bool app::benchmark::run_soft_double_h2f1()
   using std::fabs;
 
   const float64_t closeness = fabs(1 - fabs(h2f1 / control));
+  const float64_t tolerance = std::numeric_limits<float64_t>::epsilon() * 10;
 
-  const bool result_is_ok = closeness < (std::numeric_limits<float64_t>::epsilon() * 10);
+  const bool result_is_ok = (closeness < tolerance);
 
   return result_is_ok;
 }

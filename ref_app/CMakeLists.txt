@@ -120,6 +120,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${LDFLAGS} ${TARGET_LDFLAGS}" CACHE STRING "" FORCE)
 # ------------------------------------------------------------------------------
 set(app_src
     ${PATH_APP}/app/benchmark/app_benchmark
+    ${PATH_APP}/app/benchmark/app_benchmark_boost_math_cbrt_tgamma
+    ${PATH_APP}/app/benchmark/app_benchmark_boost_multiprecision_cbrt
     ${PATH_APP}/app/benchmark/app_benchmark_complex
     ${PATH_APP}/app/benchmark/app_benchmark_crc
     ${PATH_APP}/app/benchmark/app_benchmark_fast_math
@@ -130,6 +132,9 @@ set(app_src
     ${PATH_APP}/app/benchmark/app_benchmark_none
     ${PATH_APP}/app/benchmark/app_benchmark_pi_spigot
     ${PATH_APP}/app/benchmark/app_benchmark_pi_spigot_single
+    ${PATH_APP}/app/benchmark/app_benchmark_soft_double_h2f1
+    ${PATH_APP}/app/benchmark/app_benchmark_trapezoid_integral
+    ${PATH_APP}/app/benchmark/app_benchmark_wide_decimal
     ${PATH_APP}/app/benchmark/app_benchmark_wide_integer
     ${PATH_APP}/app/led/app_led
     ${PATH_APP}/mcal/${TARGET}/mcal_cpu
@@ -207,6 +212,9 @@ elseif(("${CMAKE_EXECUTABLE_SUFFIX}" STREQUAL ".elf") OR ("${CMAKE_EXECUTABLE_SU
 
         # creating hex module: ${APP}.hex
         COMMAND ${POSTBUILD_GEN_HEX}
+
+        # creating srec module: ${APP}.s19
+        COMMAND ${POSTBUILD_GEN_S19}
 
         # creating hex module: ${APP}.bin
         COMMAND ${POSTBUILD_GEN_BIN}

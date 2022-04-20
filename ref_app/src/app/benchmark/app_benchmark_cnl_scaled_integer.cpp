@@ -6,28 +6,29 @@
 //
 
 #include <algorithm>
-#include <cnl/scaled_integer.h>
 
 #include <app/benchmark/app_benchmark.h>
 #include <app/benchmark/app_benchmark_detail.h>
 
 #if(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER)
 
+#include <cnl/scaled_integer.h>
+
 namespace
 {
   template<typename NumericType>
-  NumericType quadratic(const NumericType a,
-                        const NumericType b,
-                        const NumericType c,
-                        const NumericType x)
+  auto quadratic(const NumericType a,
+                 const NumericType b,
+                 const NumericType c,
+                 const NumericType x) -> NumericType
   {
     return NumericType((NumericType(a * x) + b) * x) + c;
   }
 
   template<typename NumericType>
-  bool is_close_fraction(const NumericType a,
+  auto is_close_fraction(const NumericType a,
                          const NumericType b,
-                         const NumericType tol = NumericType(std::numeric_limits<NumericType>::epsilon() * 100))
+                         const NumericType tol = NumericType(std::numeric_limits<NumericType>::epsilon() * 100)) -> bool
   {
     using std::abs;
 
@@ -54,7 +55,7 @@ extern fixed_point_dec_type c_dec;
 extern fixed_point_dec_type x_dec;
 extern fixed_point_dec_type r_dec;
 
-bool app::benchmark::run_cnl_scaled_integer()
+auto app::benchmark::run_cnl_scaled_integer() -> bool
 {
   static std::uint_fast8_t app_benchmark_cnl_scaled_integer_type_toggler;
 
@@ -114,4 +115,4 @@ int main()
 
 #endif
 
-#endif // APP_BENCHMARK_TYPE_BOOST_MATH_CBRT
+#endif // APP_BENCHMARK_TYPE_CNL_SCALED_INTEGER

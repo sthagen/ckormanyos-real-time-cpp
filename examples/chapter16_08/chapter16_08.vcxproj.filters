@@ -470,9 +470,6 @@
     <ClInclude Include="src\math\wide_integer\miller_rabin\miller_rabin_state.h">
       <Filter>src\math\wide_integer\miller_rabin</Filter>
     </ClInclude>
-    <ClInclude Include="src\math\wide_integer\miller_rabin\miller_rabin_powm_state.h">
-      <Filter>src\math\wide_integer\miller_rabin</Filter>
-    </ClInclude>
     <ClInclude Include="src\mcal\avr\mcal_benchmark.h">
       <Filter>src\mcal\avr</Filter>
     </ClInclude>
@@ -626,6 +623,24 @@
       <Filter>src\util\STL</Filter>
     </None>
     <None Include="src\util\STL\span">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\charconv">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\bitset">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\cassert">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\cerrno">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\cstring">
+      <Filter>src\util\STL</Filter>
+    </None>
+    <None Include="src\util\STL\stdexcept">
       <Filter>src\util\STL</Filter>
     </None>
   </ItemGroup>

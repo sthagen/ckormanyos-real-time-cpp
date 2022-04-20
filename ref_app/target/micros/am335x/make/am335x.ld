@@ -1,13 +1,15 @@
 
 /*
  Copyright Michael Schnerr 2011 - 2014.
- Copyright Christopher Kormanyos 2013 - 2020.
+ Copyright Christopher Kormanyos 2007 - 2022.
  Distributed under the Boost Software License,
  Version 1.0. (See accompanying file LICENSE_1_0.txt
  or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
 
 /* Linker script for Bare-Metal BeagleBone(R) AM335x ARM(R) A8 MCU */
+
+ENTRY(__my_startup)
 
 INPUT(libc.a libm.a libgcc.a)
 
@@ -42,7 +44,7 @@ MEMORY
                                               + __UND_STACK_SIZE
                                               + __IRQ_STACK_SIZE
                                               + __FIQ_STACK_SIZE
- }
+}
 
 SECTIONS
 {
@@ -78,10 +80,11 @@ SECTIONS
   .text :
   {
     _ctors_begin = .;
-    *(.init_array)
-    . = ALIGN(4);
-    KEEP (*(SORT(.init_array)))
+    KEEP(*(SORT(.init_array.*)))
+    KEEP(*(.init_array*))
     _ctors_end = .;
+    *(.progmem*)
+    . = ALIGN(4);
     *(.text)
     . = ALIGN(4);
     *(.text*)
@@ -90,12 +93,33 @@ SECTIONS
     . = ALIGN(4);
     *(.rodata*)
     . = ALIGN(4);
+    *(.glue_7)
+    . = ALIGN(4);
+    *(.glue_7t)
+    . = ALIGN(4);
   } > ROM
 
-  .text :
+  .ARM.extab :
   {
-    . = ALIGN(0x10);
-  } > ROM = 0xAAAA
+    . = ALIGN(4);
+    *(.ARM.extab)
+    *(.gnu.linkonce.armextab.*)
+    . = ALIGN(4);
+  } > ROM
+
+  .exidx :
+  {
+    . = ALIGN(4);
+    PROVIDE(__exidx_start = .);
+    *(.ARM.exidx*)
+    . = ALIGN(4);
+    PROVIDE(__exidx_end = .);
+  } > ROM
+
+  .ARM.attributes :
+  {
+    *(.ARM.attributes)
+  } > ROM
 
   . = _ram_begin;
   . = ALIGN(4);
@@ -125,6 +149,9 @@ SECTIONS
     KEEP (*(.bss*))
     _bss_end = .;
   } > RAM
+
+  PROVIDE(end = .);
+  PROVIDE(_fini = .);
 
   . = 0x402F9000;
   . = ALIGN(4);

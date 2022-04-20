@@ -1,5 +1,5 @@
-///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2018 - 2021.
+﻿///////////////////////////////////////////////////////////////////////////////
+//  Copyright Christopher Kormanyos 2018 - 2022.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,15 +10,21 @@
 #if(APP_BENCHMARK_TYPE == APP_BENCHMARK_TYPE_WIDE_INTEGER)
 
 #define WIDE_INTEGER_DISABLE_IOSTREAM
+#define WIDE_INTEGER_DISABLE_IMPLEMENT_UTIL_DYNAMIC_ARRAY
+#define WIDE_INTEGER_DISABLE_TRIVIAL_COPY_AND_STD_LAYOUT_CHECKS
+#define WIDE_INTEGER_NAMESPACE ckormanyos
 
 #include <math/wide_integer/uintwide_t.h>
 
 namespace
 {
-  using uint256_t =
-    math::wide_integer::uintwide_t<256U, std::uint32_t>;
+  #if defined(WIDE_INTEGER_NAMESPACE)
+  using local_uint256_t = WIDE_INTEGER_NAMESPACE::math::wide_integer::uintwide_t<256U, std::uint32_t>;
+  #else
+  using local_uint256_t = math::wide_integer::uintwide_t<256U, std::uint32_t>;
+  #endif
 
-  static_assert(std::numeric_limits<uint256_t>::digits == 256,
+  static_assert(std::numeric_limits<local_uint256_t>::digits == 256,
                 "Error: Incorrect digit count for this example");
 
   // Note: Some of the comments in this file use the Wolfram Language(TM).
@@ -42,12 +48,12 @@ namespace
   // Modulus:
   //   a % b = 0x14998D5CA3DB6385F7DEDF4621DE48A9104AC13797C6567713D7ABC216D7AB4C
 
-  WIDE_INTEGER_CONSTEXPR uint256_t a("0xF4DF741DE58BCB2F37F18372026EF9CBCFC456CB80AF54D53BDEED78410065DE");
-  WIDE_INTEGER_CONSTEXPR uint256_t b("0x166D63E0202B3D90ECCEAA046341AB504658F55B974A7FD63733ECF89DD0DF75");
-  WIDE_INTEGER_CONSTEXPR uint256_t c("0xE491A360C57EB4306C61F9A04F7F7D99BE3676AAD2D71C5592D5AE70F84AF076");
-  WIDE_INTEGER_CONSTEXPR uint256_t m("0x14998D5CA3DB6385F7DEDF4621DE48A9104AC13797C6567713D7ABC216D7AB4C");
+  WIDE_INTEGER_CONSTEXPR local_uint256_t a("0xF4DF741DE58BCB2F37F18372026EF9CBCFC456CB80AF54D53BDEED78410065DE");
+  WIDE_INTEGER_CONSTEXPR local_uint256_t b("0x166D63E0202B3D90ECCEAA046341AB504658F55B974A7FD63733ECF89DD0DF75");
+  WIDE_INTEGER_CONSTEXPR local_uint256_t c("0xE491A360C57EB4306C61F9A04F7F7D99BE3676AAD2D71C5592D5AE70F84AF076");
+  WIDE_INTEGER_CONSTEXPR local_uint256_t m("0x14998D5CA3DB6385F7DEDF4621DE48A9104AC13797C6567713D7ABC216D7AB4C");
 
-  bool run_wide_integer_mul()
+  auto run_wide_integer_mul() -> bool
   {
     WIDE_INTEGER_CONSTEXPR bool result_of_mul_is_ok = ((a * b) == c);
 
@@ -58,9 +64,9 @@ namespace
     return result_of_mul_is_ok;
   }
 
-  bool run_wide_integer_div()
+  auto run_wide_integer_div() -> bool
   {
-    WIDE_INTEGER_CONSTEXPR uint256_t q(10U);
+    WIDE_INTEGER_CONSTEXPR local_uint256_t q(static_cast<std::uint8_t>(UINT8_C(10)));
 
     WIDE_INTEGER_CONSTEXPR bool result_of_div_is_ok = ((a / b) == q);
 
@@ -71,7 +77,7 @@ namespace
     return result_of_div_is_ok;
   }
 
-  bool run_wide_integer_mod()
+  auto run_wide_integer_mod() -> bool
   {
     WIDE_INTEGER_CONSTEXPR bool result_of_mod_is_ok = ((a % b) == m);
 
@@ -83,11 +89,11 @@ namespace
   }
 }
 
-bool app::benchmark::run_wide_integer()
+auto app::benchmark::run_wide_integer() -> bool
 {
   static std::uint_fast8_t select_test_case;
 
-  bool result_is_ok;
+  bool result_is_ok { };
 
   if(select_test_case == 0U)
   {
@@ -121,7 +127,7 @@ int main()
 {
   // g++ -Wall -O3 -march=native -I./ref_app/src/mcal/host -I./ref_app/src -DAPP_BENCHMARK_TYPE=APP_BENCHMARK_TYPE_WIDE_INTEGER -DAPP_BENCHMARK_STANDALONE_MAIN ./ref_app/src/app/benchmark/app_benchmark_wide_integer.cpp -o ./ref_app/bin/app_benchmark_wide_integer.exe
 
-  bool result_is_ok = true;
+  auto result_is_ok = true;
 
   for(unsigned i = 0U; i < 64U; ++i)
   {
