@@ -26,7 +26,7 @@ namespace local
   task_index_type os_task_index;
 } // namespace local
 
-void os::start_os()
+OS_NORETURN auto os::start_os() -> void
 {
   // Initialize each task once (and only once) before the task scheduling begins.
   const auto it_init_func = std::for_each(local::os_task_list.cbegin(),
@@ -78,7 +78,7 @@ auto os::set_event(const task_id_type task_id, const event_type& event_to_set) -
 {
   bool result_set_is_ok { };
 
-  if(task_id < task_id_end)
+  if(task_id < task_id_type::task_id_end)
   {
     // Get the iterator of the control block corresponding to
     // the task id that has been supplied to this subroutine.
