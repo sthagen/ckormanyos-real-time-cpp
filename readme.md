@@ -86,6 +86,7 @@ The reference application supports the following targets:
 | `stm32f407`                            | ST Microelectronics(R) STM32F407 ARM(R) Cortex(R)-M4        |
 | `stm32f429`                            | ST Microelectronics(R) STM32F429 ARM(R) Cortex(R)-M4        |
 | `stm32f446`                            | ST Microelectronics(R) STM32F446 ARM(R) Cortex(R)-M4        |
+| `stm32h7a3`                            | ST Microelectronics(R) STM32H7A3 ARM(R) Cortex(R)-M7        |
 | `v850es_fx2`                           | Renesas(R) Electronics V850es/Fx2 upd703231                 |
 | `x86_64-w64-mingw32`                   | PC on `Win*`/`mingw64` via GNU/GCC x86_x64 compiler         |
 | `xtensa32`                             | Espressif (XTENSA) NodeMCU ESP32                            |
@@ -351,6 +352,11 @@ The program toggles the blue LED on `portd.15`.
 Another ARM(R) Cortex(TM)-M4 configuration (called `target stm32f446`) runs on
 the STM32F446 Nucleo-64 board commercially available from ST Microelectronics(R).
 The program toggles the green LED on `porta.5`.
+
+The first ARM(R) Cortex(TM)-M7 configuration (called `target stm32h7a3`) runs on
+the STM32H7A3 Nucleo-144 board commercially available from ST Microelectronics(R).
+The program toggles the green LED on `portb.0`. At the moment, the target
+implementation (temporarily) uses some third party code (licensed separately).
 
 The ARM(R) A8 configuration (called `target am335x`) runs on the BeagleBone
 board (black edition). For the white edition, the CPU clock needs to be reduced
