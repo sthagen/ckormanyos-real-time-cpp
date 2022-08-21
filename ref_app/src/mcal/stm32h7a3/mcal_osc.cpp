@@ -43,9 +43,7 @@ namespace local
     }
 
     // Set the power supply configuration.
-    // MODIFY_REG (PWR->CR3, PWR_SUPPLY_CONFIG_MASK, SupplySource);
-    mcal::reg::reg_access_dynamic<std::uint32_t,
-                                  std::uint32_t>::reg_msk(mcal::reg::pwr_cr3, SupplySource, PWR_SUPPLY_CONFIG_MASK);
+    modify_reg (PWR->CR3, PWR_SUPPLY_CONFIG_MASK, SupplySource);
 
     /* Wait till voltage level flag is set */
     volatile std::uint32_t delay { };
@@ -159,18 +157,30 @@ void mcal::osc::init(const config_type*)
 
   // Initializes the CPU, AHB and APB buses clocks
 
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
-                              |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.ClockType = static_cast<std::uint32_t>
+                                (
+                                    RCC_CLOCKTYPE_HCLK
+                                  | RCC_CLOCKTYPE_SYSCLK
+                                  | RCC_CLOCKTYPE_PCLK1
+                                  | RCC_CLOCKTYPE_PCLK2
+                                  | RCC_CLOCKTYPE_D3PCLK1
+                                  | RCC_CLOCKTYPE_D1PCLK1
+                                );
+
+  RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKDivider  = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider  = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
-  constexpr auto flash_latency_2 = static_cast<std::uint32_t>(UINT8_C(2));
-
-  static_cast<void>(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency_2));
+  static_cast<void>
+  (
+    HAL_RCC_ClockConfig
+    (
+      &RCC_ClkInitStruct,
+      static_cast<std::uint32_t>(FLASH_ACR_LATENCY_2WS)
+    )
+  );
 }
