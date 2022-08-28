@@ -1,9 +1,21 @@
-## These examples are motivated by the book "Real-Time C++".
+﻿## These examples are motivated by the book "Real-Time C++".
 
 See : C.M. Kormanyos, [Real-Time C++](https://www.springer.com/de/book/9783662629956):
 Efficient Object-Oriented
 and Template Microcontroller Programming, Fourth Edition
 (Springer, Heidelberg, 2021). ISBN 9783662629956
+
+The first couple of example projects can use the ARDUINO board directly
+and non-modified. Examples from the later chapters in the book do, however,
+need additional components at times. These need to be provided independently.
+
+Consider, for instance,
+[example chapter04_04](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter04_04).
+It employs a self-fitted DIY custom breadboard.
+Other examples use even higher levels of customization such as
+[example chapter10_08a](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter10_08a)
+which requires sophistocated breadboard and laboratory techniques,
+providing a DIY challenge at an advanced level.
 
 ## Summary of the Examples
 
