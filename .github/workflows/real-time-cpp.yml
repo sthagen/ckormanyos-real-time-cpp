@@ -22,7 +22,7 @@ jobs:
         standard: [ c++14 ]
         compiler: [ g++, clang++ ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -40,7 +40,7 @@ jobs:
           echo "verify empty word count of ./tmp/all.tidy_txt"
           wc ./tmp/all.tidy_txt | grep '0 0 0'
   target-avr:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -49,7 +49,7 @@ jobs:
       matrix:
         suite: [ avr, atmega2560 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -60,7 +60,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-avr-cmake:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -69,7 +69,7 @@ jobs:
       matrix:
         suite: [ avr, atmega2560 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -89,7 +89,7 @@ jobs:
       matrix:
         suite: [ avr, atmega2560 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-osx-cross-homebrew-avr-and-install
@@ -124,7 +124,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-avr-example_led:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -133,7 +133,7 @@ jobs:
       matrix:
         example: [ chapter02_02, chapter02_06 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -146,7 +146,7 @@ jobs:
         working-directory: ./examples/
         shell: bash
   target-avr-examples:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -155,7 +155,7 @@ jobs:
       matrix:
         example: [ chapter02_03, chapter02_03a, chapter03_02, chapter04_04, chapter04_04a, chapter06_01, chapter06_14, chapter09_07, chapter09_08, chapter10_08, chapter10_08a, chapter11_07, chapter12_04, chapter16_08, chapter17_03, chapter17_03a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -167,7 +167,7 @@ jobs:
           ls -la ./bin/${{ matrix.example }}.elf ./bin/${{ matrix.example }}.map ./bin/${{ matrix.example }}.hex
         working-directory: ./examples/
   target-bcm2835_raspi_b-example10_09:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -176,7 +176,7 @@ jobs:
       matrix:
         example: [ chapter10_09 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -188,58 +188,63 @@ jobs:
           ls -la ./bin/${{ matrix.example }}.elf ./bin/${{ matrix.example }}.map ./bin/${{ matrix.example }}.hex ./bin/kernel.img
         working-directory: ./examples/
   target-msvc-examples:
-    runs-on: windows-2019
-    defaults:
-      run:
-        shell: pwsh
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         example: [ chapter02_03, chapter02_03a, chapter03_02, chapter04_04, chapter04_04a, chapter06_01, chapter06_14, chapter09_07, chapter09_08, chapter10_08, chapter10_08a, chapter10_09, chapter11_07, chapter12_04, chapter17_03, chapter17_03a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 14.2
       - name: target-msvc-examples
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd ${{ matrix.example }}
           MSBuild -m ${{ matrix.example }}.sln -p:Configuration=Release -p:Platform=x64 /t:Rebuild
           dir ./Release/${{ matrix.example }}.exe
         working-directory: ./examples/
   target-msvc-example16_08:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         example: [ chapter16_08 ]
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: '0'
-      - name: clone-submods-bootstrap-headers-boost-develop
+      - uses: actions/checkout@v3
+      - name: clone-boost-develop
+        working-directory: ${{runner.workspace}}
         run: |
-          git clone -b develop --depth 1 https://github.com/boostorg/boost.git ../boost-root
-          cd ../boost-root
+          git clone -b develop --depth 1 https://github.com/boostorg/boost.git ${{runner.workspace}}/boost-root
+      - name: clone-boost-submods
+        working-directory: ${{runner.workspace}}/boost-root
+        run: |
           git submodule update --init tools
           git submodule update --init libs/config
           git submodule update --init libs/math
           git submodule update --init libs/multiprecision
+      - name: bootstrap-boost
+        working-directory: ${{runner.workspace}}/boost-root
+        run: |
           ./bootstrap.bat
           ./b2 headers
-      - uses: actions/checkout@v1
       - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 14.2
       - name: target-msvc-example16_08
         shell: cmd
         working-directory: ./
         run: |
           cd examples/${{ matrix.example }}
-          set INCLUDE=%cd%\src\mcal\win32;%cd%\src;%cd%\..\..\..\boost-root;%INCLUDE%
+          set INCLUDE=${{runner.workspace}}\real-time-cpp\examples\${{ matrix.example }}\src\mcal\win32;%INCLUDE%
+          set INCLUDE=${{runner.workspace}}\real-time-cpp\examples\${{ matrix.example }}\src;%INCLUDE%
+          set INCLUDE=${{runner.workspace}}\boost-root;%INCLUDE%
           MSBuild -m ${{ matrix.example }}.sln -p:useenv=true -p:Configuration=Release -p:Platform=x64 /t:Rebuild
           dir .\Release\${{ matrix.example }}.exe
   target-avr-win-batch-example_led:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -248,7 +253,7 @@ jobs:
       matrix:
         example: [ chapter02_02, chapter02_06 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-real-time-cpp-toolchains-master
@@ -263,7 +268,7 @@ jobs:
           cd .\examples\${{ matrix.example }}\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-avr"
+          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2
         working-directory: ./
       - name: target-avr-win-batch-example_led
         run: |
@@ -271,7 +276,7 @@ jobs:
           .\build.bat ".\tools\Util\msys64\usr\local\gcc-11.2.0-avr\bin" avr
         working-directory: ./examples/
   target-avr-win-batch-examples:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -280,7 +285,7 @@ jobs:
       matrix:
         example: [ chapter02_03, chapter02_03a, chapter03_02, chapter04_04, chapter04_04a, chapter06_01, chapter06_14, chapter09_07, chapter09_08, chapter10_08, chapter10_08a, chapter11_07, chapter12_04, chapter17_03, chapter17_03a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-real-time-cpp-toolchains-master
@@ -295,7 +300,7 @@ jobs:
           cd .\examples\${{ matrix.example }}\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-avr"
+          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2
         working-directory: ./
       - name: target-avr-win-batch-examples
         run: |
@@ -303,7 +308,7 @@ jobs:
           .\build.bat ".\tools\Util\msys64\usr\local\gcc-11.2.0-avr\bin" avr
         working-directory: ./examples/
   target-arm-win-batch-examples:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -312,7 +317,7 @@ jobs:
       matrix:
         example: [ chapter10_09 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-real-time-cpp-toolchains-master
@@ -327,7 +332,7 @@ jobs:
           cd .\examples\${{ matrix.example }}\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-arm-none-eabi.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-arm-none-eabi"
+          start /b /wait ./gcc-11.2.0-arm-none-eabi.exe -y -gm2
         working-directory: ./
       - name: target-arm-win-batch-examples
         run: |
@@ -335,7 +340,7 @@ jobs:
           .\build.bat ".\tools\Util\msys64\usr\local\gcc-11.2.0-arm-none-eabi\bin" arm-none-eabi
         working-directory: ./examples/
   target-arm:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -344,7 +349,7 @@ jobs:
       matrix:
         suite: [ am335x, bcm2835_raspi_b, lpc11c24, stm32f100, stm32f407, stm32f429, stm32f446, stm32h7a3, stm32l100c, stm32l152 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -355,7 +360,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-arm-cmake:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -364,7 +369,7 @@ jobs:
       matrix:
         suite: [ am335x, bcm2835_raspi_b, lpc11c24, stm32f100, stm32f407, stm32f429, stm32f446, stm32h7a3, stm32l100c, stm32l152 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -384,7 +389,7 @@ jobs:
       matrix:
         suite: [ am335x, bcm2835_raspi_b, lpc11c24, stm32f100, stm32f407, stm32f429, stm32f446, stm32h7a3, stm32l100c, stm32l152 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-armmbed-homebrew-formulae-and-install
@@ -406,9 +411,9 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-x86_64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: build-target-x86_64-w64-mingw32
@@ -418,9 +423,9 @@ jobs:
         working-directory: ./ref_app/
         shell: bash
   target-host-cmake:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: build-target-host
@@ -433,7 +438,7 @@ jobs:
         working-directory: ./
         shell: bash
   msvc-msbuild:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -442,18 +447,19 @@ jobs:
       matrix:
         suite: [ Debug, Release ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 14.2
       - name: msvc-msbuild-${{ matrix.suite }}
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           MSBuild -m ref_app.sln -p:Configuration=${{ matrix.suite }} -p:Platform=x64 /t:Rebuild
           dir .\tmp\${{ matrix.suite }}\ref_app.exe
         working-directory: ./ref_app/
   msvc-msbuild-avr:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -462,13 +468,20 @@ jobs:
       matrix:
         suite: [ avr, atmega2560, atmega4809 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -477,17 +490,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-avr"
+          start /b /wait ./gcc-11.2.0-avr.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   msvc-msbuild-arm:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -496,13 +513,20 @@ jobs:
       matrix:
         suite: [ am335x, bcm2835_raspi_b, lpc11c24, stm32f100, stm32f407, stm32f429, stm32f446, stm32h7a3, stm32l100c, stm32l152 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -511,17 +535,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-arm-none-eabi.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-arm-none-eabi-avr"
+          start /b /wait ./gcc-11.2.0-arm-none-eabi.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   msvc-msbuild-rl78:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -530,13 +558,20 @@ jobs:
       matrix:
         suite: [ rl78 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -545,17 +580,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-rl78-unknown-elf.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-rl78-unknown-elf"
+          start /b /wait ./gcc-11.2.0-rl78-unknown-elf.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   msvc-msbuild-rx63n:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -564,13 +603,20 @@ jobs:
       matrix:
         suite: [ rx63n ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -579,17 +625,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-rx-elf.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-rx-elf"
+          start /b /wait ./gcc-11.2.0-rx-elf.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   msvc-msbuild-v850:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -598,13 +648,20 @@ jobs:
       matrix:
         suite: [ v850es_fx2 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -613,17 +670,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-v850-unknown-elf.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-v850-unknown-elf"
+          start /b /wait ./gcc-11.2.0-v850-unknown-elf.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   msvc-msbuild-x86_64-w64-mingw32:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -632,13 +693,20 @@ jobs:
       matrix:
         suite: [ x86_64-w64-mingw32 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -647,17 +715,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-11.2.0-x86_64-w64-mingw32.exe -y -gm2 -InstallPath=".\\gcc-11.2.0-x86_64-w64-mingw32"
+          start /b /wait ./gcc-11.2.0-x86_64-w64-mingw32.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.exe
         working-directory: ./ref_app/
   msvc-msbuild-xtensa:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: cmd
@@ -666,13 +738,20 @@ jobs:
       matrix:
         suite: [ xtensa32 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+      - name: cache win toolchains
+        id: cache-toolchains
+        uses: actions/cache@v3
+        with:
+          path: ${{runner.workspace}}/toolchains
+          key: ${{ runner.os }}-toolchains
       - name: clone-real-time-cpp-toolchains-master
+        if: steps.cache-toolchains.outputs.cache-hit != 'true'
         run: |
-          echo Cloning GNU/GCC toolchain
-          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ../toolchains
+          echo Cloning GNU/GCC toolchains
+          git clone -b master --depth 1 https://github.com/ckormanyos/real-time-cpp-toolchains.git ${{runner.workspace}}/toolchains
         working-directory: ./
       - name: extract-real-time-cpp-toolchain
         run: |
@@ -681,17 +760,21 @@ jobs:
           cd .\ref_app\tools\Util\msys64\usr\local
           dir
           echo Extracting GNU/GCC toolchain
-          start /b /wait ./gcc-8.4.0-xtensa-esp32-elf.exe -y -gm2 -InstallPath=".\\gcc-8.4.0-xtensa-esp32-elf"
+          start /b /wait ./gcc-8.4.0-xtensa-esp32-elf.exe -y -gm2
         working-directory: ./
+      - name: add msbuild to path
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
       - name: msvc-msbuild-${{ matrix.suite }}
         env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+          PATH: '${env:PATH};tools\Util\msys64\usr\bin'
         run: |
           MSBuild -m ref_app.sln -p:Configuration="target ${{ matrix.suite }}" -p:Platform=x64 /t:Rebuild
           dir .\bin\ref_app.elf .\bin\ref_app.hex .\bin\ref_app.s19
         working-directory: ./ref_app/
   benchmark_gcc-clang:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -701,11 +784,9 @@ jobs:
         compiler: [ g++, clang++ ]
         standard: [ c++14, c++17, c++2a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
-      - name: update-tools
-        run: sudo apt install clang
       - name: clone-submods-bootstrap-headers-boost-develop
         run: |
           git clone -b develop --depth 1 https://github.com/boostorg/boost.git ../boost-root
@@ -731,7 +812,7 @@ jobs:
         compiler: [ g++-8, g++-9, clang++-8, clang++-9 ]
         standard: [ c++14, c++17 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -761,7 +842,7 @@ jobs:
         compiler: [ g++-10, clang++-10 ]
         standard: [ c++14, c++17, c++20 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -788,7 +869,7 @@ jobs:
         compiler: [ g++, clang++ ]
         standard: [ c++14, c++17, c++2a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: clone-submods-bootstrap-headers-boost-develop
@@ -806,7 +887,7 @@ jobs:
         run: ./target/build/test_app_benchmarks.sh ${{ matrix.compiler }} ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_builds-avr:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -815,7 +896,7 @@ jobs:
       matrix:
         standard: [ c++14 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -824,7 +905,7 @@ jobs:
         run: ./target/build/test_app_benchmarks_avr.sh ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_builds-stm32f446:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -833,7 +914,7 @@ jobs:
       matrix:
         standard: [ c++14, c++17, c++2a ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -853,12 +934,12 @@ jobs:
         run: ./target/build/test_app_benchmarks_stm32f446.sh ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_single-stm32f446:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -881,7 +962,7 @@ jobs:
         compiler: [ g++-10, clang++-10 ]
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -895,12 +976,12 @@ jobs:
           ./bin/app_benchmark_cnl_scaled_integer.exe
         working-directory: ./ref_app/
   benchmark_single-stm32f429-qemu-cnl:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -909,8 +990,8 @@ jobs:
           mkdir -p emu_env && cd emu_env
           wget --no-check-certificate https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
           tar -xvf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
-          wget --no-check-certificate https://github.com/xpack-dev-tools/qemu-arm-xpack/releases/download/v2.8.0-13/xpack-qemu-arm-2.8.0-13-linux-x64.tar.gz
-          tar -xvzf xpack-qemu-arm-2.8.0-13-linux-x64.tar.gz
+          wget --no-check-certificate https://github.com/xpack-dev-tools/qemu-arm-xpack/releases/download/v7.1.0-1/xpack-qemu-arm-7.1.0-1-linux-x64.tar.gz
+          tar -xvzf xpack-qemu-arm-7.1.0-1-linux-x64.tar.gz
         working-directory: ./ref_app/
       - name: benchmark_single-stm32f429-qemu-cnl
         run: |
@@ -922,7 +1003,7 @@ jobs:
         working-directory: ./ref_app/
       - name: emulate-target stm32f429
         run: |
-          ./emu_env/xpack-qemu-arm-2.8.0-13/bin/qemu-system-gnuarmeclipse --verbose --mcu STM32F429ZI --nographic --gdb tcp::9999 -d unimp,guest_errors &
+          ./emu_env/xpack-qemu-arm-7.1.0-1/bin/qemu-system-gnuarmeclipse --verbose --mcu STM32F429ZI --nographic --gdb tcp::9999 -d unimp,guest_errors &
         working-directory: ./ref_app/
       - name: run-test-on-target
         run: |
@@ -932,12 +1013,12 @@ jobs:
           echo "qemu_result" "$qemu_result" | grep 'qemu_result 0'
         working-directory: ./ref_app/
   benchmark_single-stm32f429-qemu:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -946,8 +1027,8 @@ jobs:
           mkdir -p emu_env && cd emu_env
           wget --no-check-certificate https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
           tar -xvf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
-          wget --no-check-certificate https://github.com/xpack-dev-tools/qemu-arm-xpack/releases/download/v2.8.0-13/xpack-qemu-arm-2.8.0-13-linux-x64.tar.gz
-          tar -xvzf xpack-qemu-arm-2.8.0-13-linux-x64.tar.gz
+          wget --no-check-certificate https://github.com/xpack-dev-tools/qemu-arm-xpack/releases/download/v7.1.0-1/xpack-qemu-arm-7.1.0-1-linux-x64.tar.gz
+          tar -xvzf xpack-qemu-arm-7.1.0-1-linux-x64.tar.gz
         working-directory: ./ref_app/
       - name: build benchmark_single-stm32f429
         run: |
@@ -958,7 +1039,7 @@ jobs:
         working-directory: ./ref_app/
       - name: emulate-target stm32f429
         run: |
-          ./emu_env/xpack-qemu-arm-2.8.0-13/bin/qemu-system-gnuarmeclipse --verbose --mcu STM32F429ZI --nographic --gdb tcp::9999 -d unimp,guest_errors &
+          ./emu_env/xpack-qemu-arm-7.1.0-1/bin/qemu-system-gnuarmeclipse --verbose --mcu STM32F429ZI --nographic --gdb tcp::9999 -d unimp,guest_errors &
         working-directory: ./ref_app/
       - name: run-test-on-target
         run: |
