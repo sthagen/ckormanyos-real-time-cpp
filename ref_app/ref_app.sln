@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{FF08
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{05C8F17D-422D-4E38-BC39-07809736C953}"
 	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\CodeQL.yml = ..\.github\workflows\CodeQL.yml
 		..\.github\workflows\real-time-cpp-cache.yml = ..\.github\workflows\real-time-cpp-cache.yml
 		..\.github\workflows\real-time-cpp-sonar.yml = ..\.github\workflows\real-time-cpp-sonar.yml
 		..\.github\workflows\real-time-cpp.yml = ..\.github\workflows\real-time-cpp.yml
@@ -48,6 +49,7 @@ Global
 		target avr|x64 = target avr|x64
 		target bcm2835_raspi_b|x64 = target bcm2835_raspi_b|x64
 		target lpc11c24|x64 = target lpc11c24|x64
+		target riscvfe310|x64 = target riscvfe310|x64
 		target rl78|x64 = target rl78|x64
 		target rx63n|x64 = target rx63n|x64
 		target stm32f100|x64 = target stm32f100|x64
@@ -72,6 +74,7 @@ Global
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target avr|x64.ActiveCfg = Release|x64
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target bcm2835_raspi_b|x64.ActiveCfg = Release|x64
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target lpc11c24|x64.ActiveCfg = Release|x64
+		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target riscvfe310|x64.ActiveCfg = Release|x64
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target rl78|x64.ActiveCfg = Release|x64
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target rx63n|x64.ActiveCfg = Release|x64
 		{C8B59726-9319-45C3-8F11-F9F388FB6A2C}.target stm32f100|x64.ActiveCfg = Release|x64
@@ -98,6 +101,8 @@ Global
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target bcm2835_raspi_b|x64.Build.0 = target bcm2835_raspi_b|x64
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target lpc11c24|x64.ActiveCfg = target lpc11c24|x64
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target lpc11c24|x64.Build.0 = target lpc11c24|x64
+		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target riscvfe310|x64.ActiveCfg = target riscvfe310|x64
+		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target riscvfe310|x64.Build.0 = target riscvfe310|x64
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target rl78|x64.ActiveCfg = target rl78|x64
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target rl78|x64.Build.0 = target rl78|x64
 		{30CE370B-40F3-4BCD-8986-64AAFF8971BD}.target rx63n|x64.ActiveCfg = target rx63n|x64

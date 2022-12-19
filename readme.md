@@ -6,12 +6,8 @@
         <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg" alt="Build Status"></a>
     <a href="https://github.com/ckormanyos/real-time-cpp/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">
         <img src="https://custom-icon-badges.herokuapp.com/github/issues-raw/ckormanyos/real-time-cpp?logo=github" alt="Issues" /></a>
-    <a href="https://lgtm.com/projects/g/ckormanyos/real-time-cpp/context:cpp">
-        <img src="https://img.shields.io/lgtm/grade/cpp/g/ckormanyos/real-time-cpp.svg?logo=lgtm&logoWidth=18" alt="Language grade: C/C++"></a>
-    <a href="https://lgtm.com/projects/g/ckormanyos/real-time-cpp/context:python">
-        <img src="https://img.shields.io/lgtm/grade/python/g/ckormanyos/real-time-cpp.svg?logo=lgtm&logoWidth=18" alt="Language grade: Python"></a>
-    <a href="https://lgtm.com/projects/g/ckormanyos/real-time-cpp/alerts/">
-        <img src="https://img.shields.io/lgtm/alerts/g/ckormanyos/real-time-cpp.svg?logo=lgtm&logoWidth=18" alt="Total alerts" /></a>
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions/workflows/codeql.yml">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
     <a href="https://scan.coverity.com/projects/ckormanyos-real-time-cpp">
         <img src="https://scan.coverity.com/projects/24862/badge.svg" alt="Coverity Scan"></a>
     <a href="https://sonarcloud.io/summary/new_code?id=ckormanyos_real-time-cpp">
@@ -79,6 +75,7 @@ The reference application supports the following targets:
 | `Debug`/`Release`                      | PC on `Win*` via MSVC x64 compiler `Debug`/`Release`        |
 | `host`                                 | PC/Workstation on `Win*`/`mingw64`/`*nix` via host compiler |
 | `lpc11c24`                             | NXP(R) OM13093 LPC11C24 board ARM(R) Cortex(TM)-M0          |
+| `riscvfe310`                           | RISC-V FE310 SiFive (on Red Thing Board)                    |
 | `rl78`                                 | Renesas(R) RL78/G13                                         |
 | `rx63n`                                | Renesas(R) RX630/RX631                                      |
 | `stm32f100`                            | ST Microelectronics(R) STM32F100 ARM(R) Cortex(R)-M3        |
@@ -396,6 +393,10 @@ The program toggles the GPIO status LED  at GPIO index `0x47`.
 Target `v850es_fx2` uses a classic Renesas(R) V850es/Fx2 core.
 The upd703231 microcontroller derivative on an F-Line _Drive_ _It_
 starter kit is used.
+
+The `riscvfe310` target utilizes the RISC-V FE310 SiFive
+on Spark Fun's commercially available _Red_ _Thing_ Board.
+The blue LED on port GPIO0.5 is toggled.
 
 For other compatible boards, feel free contact me directly or submit
 an issue requesting support for your desired target system.
