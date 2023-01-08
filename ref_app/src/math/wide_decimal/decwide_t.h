@@ -53,8 +53,12 @@
   #error WIDE_DECIMAL_NAMESPACE_END is not defined. Ensure that <decwide_t_detail_namespace.h> is properly included.
   #endif
 
-  #if (defined(__GNUC__) && defined(__RL78__))
+  #if (defined(__GNUC__) && (defined(__RL78__) || defined(__riscv)))
   namespace std { using ::ilogb; }
+  #endif
+
+  #if (defined(__GNUC__) && defined(__riscv))
+  namespace std { using ::lround; }
   #endif
 
   WIDE_DECIMAL_NAMESPACE_BEGIN
@@ -1935,8 +1939,8 @@
       // Generate the initial estimate using division.
       // Extract the mantissa and exponent for a "manual"
       // computation of the estimate.
-      InternalFloatType dd;
-      exponent_type     ne;
+      InternalFloatType dd { };
+      exponent_type     ne { };
 
       extract_parts(dd, ne);
 
