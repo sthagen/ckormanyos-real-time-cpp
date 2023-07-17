@@ -1,4 +1,4 @@
-﻿##############################################################################
+##############################################################################
 #  Copyright Christopher Kormanyos 2021 - 2022.
 #  Distributed under the Boost Software License,
 #  Version 1.0. (See accompanying file LICENSE_1_0.txt
@@ -42,7 +42,7 @@ jobs:
           echo "verify empty word count of ./tmp/all.tidy_txt"
           wc ./tmp/all.tidy_txt | grep '0 0 0'
   target-avr:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -62,7 +62,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-avr-cmake:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -107,20 +107,14 @@ jobs:
           echo 'Install osx-cross/homebrew-avr on MacOS via brew'
           cd ${{ runner.workspace }}/homebrew-avr
           brew tap osx-cross/avr
-          brew install avr-gcc@11
+          brew install avr-gcc@12
         working-directory: ./
       - name: target-avr-macos-${{ matrix.suite }}
         run: |
-          echo Install make via brew
-          brew install make
-          echo ""
-          echo Add the brew-installed-make path
-          PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-          echo ""
           echo query the GNUmake version
           make --version
-          echo Add the brew-installed-avr-gcc@11 path
-          PATH="/usr/local/opt/avr-gcc@11/bin:$PATH"
+          echo Add the brew-installed-avr-gcc@12 path
+          PATH="/usr/local/opt/avr-gcc@12/bin:$PATH"
           echo ""
           echo Query the avr-gcc version
           avr-g++ -v
@@ -132,7 +126,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-avr-example_led:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -154,7 +148,7 @@ jobs:
         working-directory: ./examples/
         shell: bash
   target-avr-examples:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -175,7 +169,7 @@ jobs:
           ls -la ./bin/${{ matrix.example }}.elf ./bin/${{ matrix.example }}.map ./bin/${{ matrix.example }}.hex
         working-directory: ./examples/
   target-bcm2835_raspi_b-example10_09:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -252,7 +246,7 @@ jobs:
           MSBuild -m ${{ matrix.example }}.sln -p:useenv=true -p:Configuration=Release -p:Platform=x64 /t:Rebuild
           dir .\Release\${{ matrix.example }}.exe
   target-arm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -272,7 +266,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-arm-cmake:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -309,25 +303,19 @@ jobs:
           echo 'wget-macos-gnu-arm-toolchain'
           echo ""
           mkdir -p macos-gnu-arm-toolchain && cd macos-gnu-arm-toolchain
-          wget --no-check-certificate https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.07/gcc-arm-none-eabi-10.3-2021.07-mac-10.14.6.tar.bz2
+          wget --no-check-certificate https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
         working-directory: ${{ runner.workspace }}
       - name: unpack-macos-gnu-arm-toolchain
         run: |
           cd ${{ runner.workspace }}/macos-gnu-arm-toolchain
-          tar -xvf gcc-arm-none-eabi-10.3-2021.07-mac-10.14.6.tar.bz2
+          tar -xvf arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
       - name: target-arm-macos-${{ matrix.suite }}
         run: |
           echo 'set and verify add path macos gnu arm toolchain'
-          PATH="${{ runner.workspace }}/macos-gnu-arm-toolchain/gcc-arm-none-eabi-10.3-2021.07/bin:$PATH"
+          PATH="${{ runner.workspace }}/macos-gnu-arm-toolchain/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi/bin:$PATH"
           echo ""
           echo 'arm-none-eabi-g++ -v'
           arm-none-eabi-g++ -v
-          echo ""
-          echo Install make via brew
-          brew install make
-          echo ""
-          echo Add the brew-installed-make path
-          PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
           echo ""
           echo query the GNUmake version
           make --version
@@ -338,7 +326,7 @@ jobs:
           ls -la ./bin/ref_app.hex ./bin/ref_app.s19 ./bin/ref_app.map
         working-directory: ./ref_app/
   target-riscvfe310:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -352,17 +340,17 @@ jobs:
           fetch-depth: '0'
       - name: update-tools
         run: |
-          wget --no-check-certificate https://github.com/xpack-dev-tools/riscv-none-embed-gcc-xpack/releases/download/v10.2.0-1.2/xpack-riscv-none-embed-gcc-10.2.0-1.2-linux-x64.tar.gz
-          tar -xvzf xpack-riscv-none-embed-gcc-10.2.0-1.2-linux-x64.tar.gz
+          wget --no-check-certificate https://buildbot.embecosm.com/job/riscv32-gcc-ubuntu2204-release/6/artifact/riscv32-embecosm-ubuntu2204-gcc13.1.0.tar.gz
+          tar -xvzf riscv32-embecosm-ubuntu2204-gcc13.1.0.tar.gz
         working-directory: ./
       - name: target-riscvfe310-${{ matrix.suite }}
         run: |
-          PATH=../xpack-riscv-none-embed-gcc-10.2.0-1.2/bin:$PATH
+          PATH=../riscv32-embecosm-ubuntu2204-gcc13.1.0/bin:$PATH
           ./target/build/build.sh ${{ matrix.suite }} rebuild
           ls -la ./bin/ref_app.elf ./bin/ref_app.hex ./bin/ref_app.map ./bin/ref_app.s19
         working-directory: ./ref_app/
   target-x86_64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -374,7 +362,7 @@ jobs:
         working-directory: ./ref_app/
         shell: bash
   target-host-cmake:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -523,7 +511,7 @@ jobs:
         run: ./target/build/test_app_benchmarks.sh ${{ matrix.compiler }} ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_builds-avr:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -541,7 +529,7 @@ jobs:
         run: ./target/build/test_app_benchmarks_avr.sh ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_builds-stm32f446:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -570,7 +558,7 @@ jobs:
         run: ./target/build/test_app_benchmarks_stm32f446.sh ${{ matrix.standard }}
         working-directory: ./ref_app/
   benchmark_single-stm32f446:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -588,21 +576,19 @@ jobs:
           ls -la ./bin/app_benchmark_crc.elf ./bin/app_benchmark_crc.hex ./bin/app_benchmark_crc.map
         working-directory: ./ref_app/
   benchmark_single-cnl:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ g++-10, clang++-10 ]
+        compiler: [ g++, clang++ ]
         standard: [ c++20 ]
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
-      - name: update-tools
-        run: sudo apt install g++-10 clang-10
       - name: benchmark_single-cnl
         run: |
           git clone -b main --depth 1 https://github.com/johnmcfarlane/cnl.git ../cnl-root
