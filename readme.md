@@ -4,6 +4,10 @@
 <p align="center">
     <a href="https://github.com/ckormanyos/real-time-cpp/actions">
         <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg" alt="Build Status"></a>
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp-examples.yml/badge.svg" alt="Build Examples"></a>
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp-snippets.yml/badge.svg" alt="Build Snippets"></a>
     <a href="https://github.com/ckormanyos/real-time-cpp/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">
         <img src="https://custom-icon-badges.herokuapp.com/github/issues-raw/ckormanyos/real-time-cpp?logo=github" alt="Issues" /></a>
     <a href="https://github.com/ckormanyos/real-time-cpp/actions/workflows/codeql.yml">
@@ -25,7 +29,7 @@ for the book C.M. Kormanyos,
 [Real-Time C++](https://www.springer.com/de/book/9783662629956):
 Efficient Object-Oriented
 and Template Microcontroller Programming, Fourth Edition
-(Springer, Heidelberg, 2021). ISBN 9783662629956
+(Springer, Heidelberg, 2021) ISBN 9783662629956.
 
 This repository has three main parts.
   - Reference Application `ref_app` located in [./ref_app](./ref_app)
@@ -166,48 +170,69 @@ cd ref_app
 
 ### Example build on MacOS for `target stm32f446`
 
-We will now exemplify how to build the reference application on a command shell
+We will now exemplify how to build the reference application in a command shell
 in MacOS for an ARM(R) target. Consider, for example, the build variant
 `target stm32f446`. The NUCLEO-F446RE board from STMicroelectronics(R)
 can conveniently be used for this.
 
-Install `gcc-arm-none-eabi` if needed. In this case,
-I have found it convenient to use
-[ArmMbed/homebrew-formulae](https://github.com/ARMmbed/homebrew-formulae).
-Follow the instructions there. Alternatively,
-a modern `gcc-arm-none-eabi` for MacOS can be found at the
-[Arm GNU Toolchain Downloads](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads).
-
 Clone or get the [ckormanyos/real-time-cpp](https://github.com/ckormanyos/real-time-cpp)
 repository.
 
-The default version 3.81 of GNUmake on MacOS, has been found
-to be slightly incompatible with the make files used in this
-repository. This was identified and corrected in
+The default version 3.81 of GNUmake on MacOS can (now) be used.
+The make files used in this repository have been made
+compatible with it. For background information, see also
 [issue 273](https://github.com/ckormanyos/real-time-cpp/issues/273).
 
-In order to work around this, we need to install (via _brew_)
-a newer version of GNUmake.
-This installs a version of GNUmake called `gmake` in the path
-and we will be using this `gmake` instead of the usual `make`.
-
-```
-brew install make
-```
-
-Query the `gmake` version with
-
-```
-gmake --version
-```
-
-Now build the target with a direct call to `gamke`.
+Build the target with a direct call to `make`.
 
 ```sh
 cd real-time-cpp
 cd ref_app
-gmake -f target/app/make/app_make_linux.gmk rebuild TGT=stm32f446 MY_GMAKE=gmake
+make -f target/app/make/app_make_linux.gmk rebuild TGT=stm32f446
 ```
+
+If the toolchain is needed then it must be installed or retrieved
+prior to building the target of the reference application.
+
+You can `wget` (or with a slightly different procedure optionally install)
+the `gcc-arm-none-eabi` toolchain if needed.
+In this case, I have found it convenient to use
+a modern GCC-`arm-none-eabi` for MacOS which can be found at
+[Arm GNU Toolchain Downloads](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads).
+
+The `arm-non-eabi` toolchain can be fetched via `wget`
+and successfully used locally in the shell. If this is desired,
+follow the step-by-step procedure below.
+
+Step 1: Make a local directory (such as `macos-gnu-arm-toolchain`) and `cd` into it.
+
+```sh
+cd real-time-cpp
+mkdir -p macos-gnu-arm-toolchain
+cd macos-gnu-arm-toolchain
+```
+
+Step 2: Fetch the toolchain's tarball with `wget`, unpack it
+and add the compiler's `bin`-directory to the shell's executable path.
+
+```sh
+wget --no-check-certificate https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
+tar -xvf arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
+PATH=$(pwd)/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi/bin:$PATH
+```
+
+Step 3: Optionally `echo` the `PATH` for a quick path-check.
+It can also be helpful to query `arm-non-eabi-g++`'s version
+in order to verify that the toolchain is correctly added
+to this shell's local `PATH`.
+
+```sh
+echo $PATH
+arm-none-eabi-g++ -v
+```
+
+Now repeat (or retry) the commands to build the target,
+as shown above with a direct call to `make`.
 
 ### Build with VisualStudio(R) Project and CMD Batch
 
@@ -469,11 +494,25 @@ depending on the particular OS/build/target-configuration.
 
 ### Build Status
 
-Here is the build status badge.
+At the moment, there are three major builds. Each build emphasizes
+different capabilities of the companion code.
 
-[![Build Status](https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg)](https://github.com/ckormanyos/real-time-cpp/actions)
+  - Build `ref_app` and benchmarks for various targets and host(s) on  both `*nix` as well as `Win*`.
+  - Build the examples on `*nix`.
+  - Build the code snippets on `*nix`.
 
-The build status badge represents the state of the nightly CI builds and tests.
+Here are the build status badges.
+
+<p align="center">
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp.yml/badge.svg" alt="Build Status"></a>
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp-examples.yml/badge.svg" alt="Build Examples"></a>
+    <a href="https://github.com/ckormanyos/real-time-cpp/actions">
+        <img src="https://github.com/ckormanyos/real-time-cpp/actions/workflows/real-time-cpp-snippets.yml/badge.svg" alt="Build Snippets"></a>
+</p>
+
+The build status badges represent the state of the nightly CI builds and tests.
 
 ## GNU/GCC Compilers
 
