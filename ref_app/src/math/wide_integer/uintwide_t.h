@@ -14,9 +14,15 @@
   #endif
   #endif
 
+  #if ((__cplusplus < 202100L) || (defined(__GNUC__) && defined(__AVR__)))
+  #include <ciso646>
+  #else
+  #include <version>
+  #endif
+
   #include <algorithm>
   #include <array>
-  #if defined(__cpp_lib_to_chars)
+  #if (defined(__cpp_lib_to_chars) && (__cpp_lib_to_chars >= 201611L))
   #include <charconv>
   #endif
   #include <cinttypes>
@@ -39,6 +45,9 @@
   #endif
   #if !defined(WIDE_INTEGER_DISABLE_IMPLEMENT_UTIL_DYNAMIC_ARRAY)
   #include <memory>
+  #endif
+  #if (defined(__cpp_lib_gcd_lcm) && (__cpp_lib_gcd_lcm >= 201606L))
+  #include <numeric>
   #endif
   #if !defined(WIDE_INTEGER_DISABLE_IOSTREAM)
   #include <ostream>
@@ -131,13 +140,8 @@
     #define WIDE_INTEGER_NAMESPACE_END
   #endif
 
-  namespace test_uintwide_t_edge {
-
-  // Forward declaration.
-  // This is needed for class-friendship with the uintwide_t template class.
-  auto test_various_isolated_edge_cases() -> bool;
-
-  } // namespace test_uintwide_t_edge
+  // Forward declaration needed for class-friendship with the uintwide_t template class.
+  namespace test_uintwide_t_edge { auto test_various_isolated_edge_cases() -> bool; } // namespace test_uintwide_t_edge
 
   WIDE_INTEGER_NAMESPACE_BEGIN
 
@@ -179,6 +183,99 @@
     }
 
     return dest;
+  }
+
+  template <class UnsignedIntegralType>
+  WIDE_INTEGER_CONSTEXPR auto clz_unsafe(UnsignedIntegralType v) noexcept -> std::enable_if_t<(   (std::is_integral<UnsignedIntegralType>::value)
+                                                                                               && (std::is_unsigned<UnsignedIntegralType>::value)), unsigned>
+  {
+    using local_unsigned_integral_type = UnsignedIntegralType;
+
+    auto yy = static_cast<local_unsigned_integral_type>(UINT8_C(0));
+
+    auto nn = static_cast<unsigned>(std::numeric_limits<local_unsigned_integral_type>::digits);
+
+    auto cc = // NOLINT(altera-id-dependent-backward-branch)
+      static_cast<unsigned>
+      (
+        std::numeric_limits<local_unsigned_integral_type>::digits / static_cast<int>(INT8_C(2))
+      );
+
+    do
+    {
+      yy = static_cast<local_unsigned_integral_type>(v >> cc);
+
+      if(yy != static_cast<local_unsigned_integral_type>(UINT8_C(0)))
+      {
+        nn -= cc;
+
+        v = yy;
+      }
+
+      cc >>= static_cast<unsigned>(UINT8_C(1));
+    }
+    while(cc != static_cast<unsigned>(UINT8_C(0))); // NOLINT(altera-id-dependent-backward-branch)
+
+    return
+      static_cast<unsigned>
+      (
+        static_cast<unsigned>(nn) - static_cast<unsigned>(v)
+      );
+  }
+
+  template<typename UnsignedIntegralType>
+  WIDE_INTEGER_CONSTEXPR auto ctz_unsafe(const UnsignedIntegralType v) noexcept -> std::enable_if_t<(   (std::is_integral<UnsignedIntegralType>::value)
+                                                                                                     && (std::is_unsigned<UnsignedIntegralType>::value)), unsigned>
+  {
+    using local_unsigned_integral_type = UnsignedIntegralType;
+
+    constexpr auto local_digits = static_cast<unsigned>(std::numeric_limits<local_unsigned_integral_type>::digits);
+
+    const auto clz_mask =
+      static_cast<local_unsigned_integral_type>
+      (
+          static_cast<local_unsigned_integral_type>(~v)
+        & static_cast<local_unsigned_integral_type>(v - static_cast<local_unsigned_integral_type>(UINT8_C(1)))
+      );
+
+    return static_cast<unsigned>(local_digits - clz_unsafe(clz_mask));
+  }
+
+  template<typename UnsignedIntegralType>
+  WIDE_INTEGER_CONSTEXPR auto gcd_unsafe(UnsignedIntegralType u, UnsignedIntegralType v) -> std::enable_if_t<(   (std::is_integral<UnsignedIntegralType>::value) // NOLINT(altera-id-dependent-backward-branch)
+                                                                                                              && (std::is_unsigned<UnsignedIntegralType>::value)), UnsignedIntegralType>
+  {
+    using local_unsigned_integral_type = UnsignedIntegralType;
+
+    // Handle cases having (u != 0) and (v != 0).
+    if(u == static_cast<local_unsigned_integral_type>(UINT8_C(0))) { return v; }
+
+    if(v == static_cast<local_unsigned_integral_type>(UINT8_C(0))) { return u; }
+
+    // Shift the greatest power of 2 dividing both u and v.
+    const auto trz = static_cast<unsigned>(ctz_unsafe(u));
+
+    const auto shift_amount = (std::min)(trz, ctz_unsafe(v));
+
+    v >>= shift_amount;
+    u >>= trz;
+
+    do
+    {
+      // Reduce the GCD.
+
+      v >>= ctz_unsafe(v);
+
+      if(u > v)
+      {
+        std::swap(u, v);
+      }
+
+      v -= u;
+    }
+    while(v != static_cast<local_unsigned_integral_type>(UINT8_C(0))); // NOLINT(altera-id-dependent-backward-branch)
+
+    return static_cast<local_unsigned_integral_type>(u << shift_amount);
   }
 
   #if(__cplusplus >= 201703L)
@@ -1006,7 +1103,7 @@
                           DistributionType&                                      distribution,
                           GeneratorType&                                         generator) -> bool;
 
-  #if defined(__cpp_lib_to_chars)
+  #if (defined(__cpp_lib_to_chars) && (__cpp_lib_to_chars >= 201611L))
   template<const size_t Width2,
            typename LimbType,
            typename AllocatorType,
@@ -1440,7 +1537,7 @@
       const auto ff =
         static_cast<native_float_type>
         (
-          (f < static_cast<native_float_type>(0)) ? -f : f
+          (f < static_cast<native_float_type>(0.0F)) ? static_cast<native_float_type>(-f) : f
         );
 
       if(ff < (std::numeric_limits<native_float_type>::min)())
@@ -1453,7 +1550,7 @@
       // Get the fraction and base-2 exponent.
       auto man = static_cast<native_float_type>(frexp(f, &my_exponent_part));
 
-      unsigned n2 = 0U;
+      auto n2 = static_cast<unsigned>(UINT8_C(0));
 
       for(auto   i = static_cast<std::uint_fast16_t>(UINT8_C(0));
                  i < static_cast<std::uint_fast16_t>(std::numeric_limits<native_float_type>::digits);
@@ -1461,25 +1558,25 @@
       {
         // Extract the mantissa of the floating-point type in base-2
         // (one bit at a time) and store it in an unsigned long long.
-        man *= 2;
+        man *= static_cast<int>(INT8_C(2));
 
         n2   = static_cast<unsigned>(man);
         man -= static_cast<native_float_type>(n2);
 
         if(n2 != static_cast<unsigned>(UINT8_C(0)))
         {
-          my_mantissa_part |= 1U;
+          my_mantissa_part |= static_cast<unsigned>(UINT8_C(1));
         }
 
-        if(i < static_cast<unsigned>(std::numeric_limits<native_float_type>::digits - 1))
+        if(i < static_cast<unsigned>(static_cast<int>(std::numeric_limits<native_float_type>::digits - static_cast<int>(INT8_C(1)))))
         {
-          my_mantissa_part <<= 1U;
+          my_mantissa_part <<= static_cast<unsigned>(UINT8_C(1));
         }
       }
 
       // Ensure that the value is normalized and adjust the exponent.
       my_mantissa_part |= static_cast<unsigned long long>(1ULL << static_cast<unsigned>(std::numeric_limits<native_float_type>::digits - 1)); // NOLINT(google-runtime-int)
-      my_exponent_part -= 1;
+      my_exponent_part -= static_cast<int>(INT8_C(1));
     }
 
     constexpr native_float_parts(const native_float_parts& other) : my_mantissa_part(other.my_mantissa_part),
@@ -1551,7 +1648,7 @@
     using limb_type = LimbType;
 
     using double_limb_type =
-      typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<limb_type>::digits * 2)>::exact_unsigned_type;
+      typename detail::uint_type_helper<static_cast<size_t>(static_cast<int>(std::numeric_limits<limb_type>::digits * static_cast<int>(INT8_C(2))))>::exact_unsigned_type;
 
     // Legacy ularge and ushort types. These are no longer used
     // in the class, but provided for legacy compatibility.
@@ -1596,8 +1693,8 @@
     //   * And that there are at least 16, 24 or 32 binary digits, or more.
     //   * And that the number of binary digits is an exact multiple of the number of limbs.
     static_assert(    detail::verify_power_of_two_times_granularity_one_sixty_fourth<my_width2>::conditional_value
-                  && (my_width2 >= 16U) // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-                  && (my_width2 == (number_of_limbs * static_cast<size_t>(std::numeric_limits<limb_type>::digits))),
+                  && (my_width2 >= static_cast<size_t>(UINT8_C(16)))
+                  && (my_width2 == static_cast<size_t>(number_of_limbs * static_cast<size_t>(std::numeric_limits<limb_type>::digits))),
                   "Error: Width2 must be 2^n times 1...63 (with n >= 3), while being 16, 24, 32 or larger, and exactly divisible by limb count");
 
     // The type of the internal data representation.
@@ -1623,7 +1720,7 @@
     using const_reverse_iterator = typename representation_type::const_reverse_iterator;
 
     // Define a class-local type that has double the width of *this.
-    using double_width_type = uintwide_t<static_cast<size_t>(Width2 * 2U), limb_type, AllocatorType, IsSigned>;
+    using double_width_type = uintwide_t<static_cast<size_t>(Width2 * static_cast<size_t>(UINT8_C(2))), limb_type, AllocatorType, IsSigned>;
 
     // Default constructor.
     constexpr uintwide_t() = default;
@@ -1710,13 +1807,17 @@
 
       if(!(isfinite)(f))
       {
-        operator=(0U);
+        operator=(static_cast<unsigned>(UINT8_C(0)));
       }
       else
       {
         const auto f_is_neg = (f < static_cast<local_builtin_float_type>(0.0F));
 
-        const local_builtin_float_type a = ((!f_is_neg) ? f : -f);
+        const auto a =
+          static_cast<local_builtin_float_type>
+          (
+            (!f_is_neg) ? f : static_cast<local_builtin_float_type>(-f)
+          );
 
         const auto a_is_zero = (a < static_cast<local_builtin_float_type>(1.0F));
 
@@ -1730,11 +1831,16 @@
 
           // Scale the unsigned long long representation to the fractional
           // part of the long double and multiply with the base-2 exponent.
-          const int p2 = ld_parts.get_exponent() - (std::numeric_limits<FloatingPointType>::digits - 1);
+          const auto p2 =
+            static_cast<int>
+            (
+                ld_parts.get_exponent()
+              - static_cast<int>(std::numeric_limits<FloatingPointType>::digits - static_cast<int>(INT8_C(1)))
+            );
 
-          if     (p2 <   0) { *this >>= static_cast<unsigned>(-p2); }
-          else if(p2 ==  0) { ; }
-          else              { *this <<= static_cast<unsigned>( p2); }
+          if     (p2 <   static_cast<int>(INT8_C(0))) { *this >>= static_cast<unsigned>(-p2); }
+          else if(p2 ==  static_cast<int>(INT8_C(0))) { ; }
+          else                                        { *this <<= static_cast<unsigned>( p2); }
 
           if(f_is_neg)
           {
@@ -1743,7 +1849,7 @@
         }
         else
         {
-          operator=(0U);
+          operator=(static_cast<unsigned>(UINT8_C(0)));
         }
       }
     }
@@ -1892,9 +1998,12 @@
     {
       using local_integral_type = IntegralType;
 
-      return ((!is_neg(*this))
-               ? extract_builtin_integral_type<local_integral_type>()
-               : detail::negate((-*this).template extract_builtin_integral_type<local_integral_type>()));
+      return
+        (
+          (!is_neg(*this))
+            ? extract_builtin_integral_type<local_integral_type>()
+            : detail::negate((-*this).template extract_builtin_integral_type<local_integral_type>())
+        );
     }
 
     // Cast operator to built-in Boolean type.
@@ -1979,22 +2088,22 @@
         const uintwide_t self(other);
 
         // Unary addition function.
-        const limb_type carry = eval_add_n(values.begin(), // LCOV_EXCL_LINE
-                                           values.cbegin(),
-                                           self.values.cbegin(),
-                                           static_cast<unsigned_fast_type>(number_of_limbs),
-                                           static_cast<limb_type>(UINT8_C(0)));
+        const auto carry = eval_add_n(values.begin(), // LCOV_EXCL_LINE
+                                      values.cbegin(),
+                                      self.values.cbegin(),
+                                      static_cast<unsigned_fast_type>(number_of_limbs),
+                                      static_cast<limb_type>(UINT8_C(0)));
 
         static_cast<void>(carry);
       }
       else
       {
         // Unary addition function.
-        const limb_type carry = eval_add_n(values.begin(),
-                                           values.cbegin(),
-                                           other.values.cbegin(),
-                                           static_cast<unsigned_fast_type>(number_of_limbs),
-                                           static_cast<limb_type>(UINT8_C(0)));
+        const auto carry = eval_add_n(values.begin(),
+                                      values.cbegin(),
+                                      other.values.cbegin(),
+                                      static_cast<unsigned_fast_type>(number_of_limbs),
+                                      static_cast<limb_type>(UINT8_C(0)));
 
         static_cast<void>(carry);
       }
@@ -2011,11 +2120,11 @@
       else
       {
         // Unary subtraction function.
-        const limb_type has_borrow = eval_subtract_n(values.begin(),
-                                                     values.cbegin(),
-                                                     other.values.cbegin(),
-                                                     number_of_limbs,
-                                                     false);
+        const auto has_borrow = eval_subtract_n(values.begin(),
+                                                values.cbegin(),
+                                                other.values.cbegin(),
+                                                number_of_limbs,
+                                                false);
 
         static_cast<void>(has_borrow);
       }
@@ -2164,12 +2273,14 @@
     {
       if(this != &other) // LCOV_EXCL_LINE
       {
-        // Perform bitwise OR.
-        auto bi = other.values.cbegin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto) // LCOV_EXCL_LINE
+        auto bi = other.values.cbegin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto)
 
-        for(auto ai = values.begin(); ai != values.end(); ++ai) // NOLINT(altera-id-dependent-backward-branch,llvm-qualified-auto,readability-qualified-auto)
+        // Perform bitwise OR.
+        for(auto& a : values)
         {
-          *ai = static_cast<limb_type>(*ai | *bi++);
+          a = static_cast<limb_type>(a | *bi);
+
+          ++bi;
         }
       }
 
@@ -2184,12 +2295,14 @@
       }
       else
       {
-        // Perform bitwise XOR.
-        auto bi = other.values.cbegin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto) // LCOV_EXCL_LINE
+        auto bi = other.values.cbegin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto)
 
-        for(auto ai = values.begin(); ai != values.end(); ++ai) // NOLINT(altera-id-dependent-backward-branch,llvm-qualified-auto,readability-qualified-auto)
+        // Perform bitwise XOR.
+        for(auto& a : values)
         {
-          *ai = static_cast<limb_type>(*ai ^ *bi++);
+          a = static_cast<limb_type>(a ^ *bi);
+
+          ++bi;
         }
       }
 
@@ -2200,12 +2313,14 @@
     {
       if(this != &other) // LCOV_EXCL_LINE
       {
-        // Perform bitwise AND.
         auto bi = other.values.cbegin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto)
 
-        for(auto ai = values.begin(); ai != values.end(); ++ai) // NOLINT(altera-id-dependent-backward-branch,llvm-qualified-auto,readability-qualified-auto)
+        // Perform bitwise AND.
+        for(auto& a : values)
         {
-          *ai = static_cast<limb_type>(*ai & *bi++);
+          a = static_cast<limb_type>(a & *bi);
+
+          ++bi;
         }
       }
 
@@ -2442,7 +2557,11 @@
 
         string_storage_oct_type str_temp; // LCOV_EXCL_LINE
 
-        auto pos = static_cast<unsigned_fast_type>(str_temp.size() - static_cast<size_t>(UINT8_C(1))); // LCOV_EXCL_LINE
+        auto pos = // LCOV_EXCL_LINE
+          static_cast<unsigned_fast_type>
+          (
+            str_temp.size() - static_cast<size_t>(UINT8_C(1)) // LCOV_EXCL_LINE
+          );
 
         if(t.is_zero())
         {
@@ -2452,7 +2571,7 @@
         {
           if(!is_neg(t))
           {
-            while(!t.is_zero())
+            while(!t.is_zero()) // NOLINT(altera-id-dependent-backward-branch)
             {
               auto c = static_cast<char>(*t.values.cbegin() & mask);
 
@@ -2460,7 +2579,7 @@
 
               str_temp[static_cast<typename string_storage_oct_type::size_type>(--pos)] = c;
 
-              t >>= 3U;
+              t >>= static_cast<unsigned>(UINT8_C(3));
             }
           }
           else
@@ -2475,7 +2594,7 @@
 
               str_temp[static_cast<typename string_storage_oct_type::size_type>(--pos)] = c;
 
-              tu >>= 3U; // LCOV_EXCL_LINE
+              tu >>= static_cast<unsigned>(UINT8_C(3));
             }
           }
         }
@@ -2549,7 +2668,7 @@
                   (
                     tmp - (uintwide_t(t).mul_by_limb(static_cast<limb_type>(UINT8_C(10))))
                   )
-                + UINT8_C(0x30)
+                + static_cast<limb_type>(UINT8_C(0x30))
               );
           }
         }
@@ -2957,7 +3076,7 @@
 
       while(!tu.is_zero()) // NOLINT(altera-id-dependent-backward-branch)
       {
-        char c(*tu.values.cbegin() & mask);
+        auto c = static_cast<char>(*tu.values.cbegin() & mask);
 
         if      (c <= static_cast<char>(INT8_C(  9)))                                           { c = static_cast<char>(c + static_cast<char>(INT8_C(0x30))); }
         else if((c >= static_cast<char>(INT8_C(0xA))) && (c <= static_cast<char>(INT8_C(0xF)))) { c = static_cast<char>(c + (is_uppercase ? static_cast<char>(INT8_C(55)) : static_cast<char>(INT8_C(87)))); }
@@ -2985,8 +3104,7 @@
 
       while(pa != std::reverse_iterator<InputIteratorLeftType>(a)) // NOLINT(altera-id-dependent-backward-branch)
       {
-        using value_left_type =
-          typename std::iterator_traits<InputIteratorLeftType>::value_type;
+        using value_left_type = typename std::iterator_traits<InputIteratorLeftType>::value_type;
 
         const auto value_a = *pa++;
         const auto value_b = static_cast<value_left_type>(*pb++);
@@ -3064,8 +3182,8 @@
       using local_unknown_integral_type = UnknownBuiltInIntegralType;
       using digits_ratio_type           = digits_ratio<local_unknown_integral_type>;
 
-      const unsigned_fast_type ilim = (std::min)(static_cast<unsigned_fast_type>(digits_ratio_type::value),
-                                                 static_cast<unsigned_fast_type>(values.size()));
+      const auto ilim = (std::min)(static_cast<unsigned_fast_type>(digits_ratio_type::value),
+                                   static_cast<unsigned_fast_type>(values.size()));
 
       // Handle cases for which the input parameter is less wide
       // or equally as wide as the limb width or wider than the limb width.
@@ -3116,9 +3234,9 @@
             ld = static_cast<long double>(ld + ldexp_runner);
           }
 
-          constexpr long double two_ldbl(2.0L);
+          constexpr auto two_ldbl = static_cast<long double>(2.0L);
 
-          lm_mask      = static_cast<limb_type>  (lm_mask << 1U);
+          lm_mask      = static_cast<limb_type>  (lm_mask << static_cast<unsigned>(UINT8_C(1)));
           ldexp_runner = static_cast<long double>(ldexp_runner * two_ldbl);
         }
 
@@ -3127,7 +3245,7 @@
         ++ui;
       }
 
-      return static_cast<local_builtin_float_type>((!u_is_neg) ? a : -a);
+      return static_cast<local_builtin_float_type>((!u_is_neg) ? a : static_cast<local_builtin_float_type>(-a));
     }
     #endif
 
@@ -3173,26 +3291,27 @@
 
       // Unary multiplication function using Karatsuba multiplication.
 
-      constexpr size_t local_number_of_limbs =
-        uintwide_t<OtherWidth2, LimbType, AllocatorType, IsSigned>::number_of_limbs;
+      constexpr auto local_number_of_limbs = uintwide_t<OtherWidth2, LimbType, AllocatorType, IsSigned>::number_of_limbs;
 
       // TBD: Can use specialized allocator or memory pool for these arrays.
       // Good examples for this (both threaded as well as non-threaded)
       // can be found in the wide_decimal project.
       using result_array_type =
         std::conditional_t<std::is_same<AllocatorType, void>::value,
-                           detail::fixed_static_array <limb_type, number_of_limbs * 2U>,
+                           detail::fixed_static_array <limb_type,
+                                                       static_cast<size_t>(number_of_limbs * static_cast<size_t>(UINT8_C(2)))>,
                            detail::fixed_dynamic_array<limb_type,
-                                                       number_of_limbs * 2U,
+                                                       static_cast<size_t>(number_of_limbs * static_cast<size_t>(UINT8_C(2))),
                                                        typename std::allocator_traits<std::conditional_t<std::is_same<AllocatorType, void>::value,
                                                                                                          std::allocator<void>,
                                                                                                          AllocatorType>>::template rebind_alloc<limb_type>>>;
 
       using storage_array_type =
         std::conditional_t<std::is_same<AllocatorType, void>::value,
-                           detail::fixed_static_array <limb_type, number_of_limbs * 4U>,
+                           detail::fixed_static_array <limb_type,
+                                                       static_cast<size_t>(number_of_limbs * static_cast<size_t>(UINT8_C(4)))>,
                            detail::fixed_dynamic_array<limb_type,
-                                                       number_of_limbs * 4U,
+                                                       static_cast<size_t>(number_of_limbs * static_cast<size_t>(UINT8_C(4))),
                                                        typename std::allocator_traits<std::conditional_t<std::is_same<AllocatorType, void>::value,
                                                                                                          std::allocator<void>,
                                                                                                          AllocatorType>>::template rebind_alloc<limb_type>>>;
@@ -3328,12 +3447,12 @@
       );
 
       using local_double_limb_type =
-        typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<local_limb_type>::digits * 2)>::exact_unsigned_type;
+        typename detail::uint_type_helper<static_cast<size_t>(static_cast<int>(std::numeric_limits<local_limb_type>::digits * static_cast<int>(INT8_C(2))))>::exact_unsigned_type;
 
       using result_difference_type = typename std::iterator_traits<ResultIterator>::difference_type;
       using left_difference_type   = typename std::iterator_traits<InputIteratorLeft>::difference_type;
+      using left_value_type        = typename std::iterator_traits<InputIteratorLeft>::value_type;
       using right_difference_type  = typename std::iterator_traits<InputIteratorRight>::difference_type;
-      using result_value_type      = typename std::iterator_traits<ResultIterator>::value_type;
 
       // The algorithm has been derived from the polynomial multiplication.
       // After the multiplication terms of equal order are grouped
@@ -3359,17 +3478,17 @@
       local_double_limb_type r1;
       local_double_limb_type r2;
 
-      const auto a0b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0))));
-      const auto a0b1 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1))));
-      const auto a1b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0))));
-      const auto a1b1 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1))));
+      const auto a0b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0)))));
+      const auto a0b1 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1)))));
+      const auto a1b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0)))));
+      const auto a1b1 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1)))));
 
       // One special case is considered, the case of multiplication
       // of the form BITS/2 * BITS/2 = BITS. In this case, the algorithm
       // can be significantly simplified by using only the 'lower-halves'
       // of the data.
-      if(    (*detail::advance_and_point(a, static_cast<left_difference_type>(2)) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(2)) == 0U)
-          && (*detail::advance_and_point(a, static_cast<left_difference_type>(3)) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(3)) == 0U))
+      if(    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))) == static_cast<left_value_type>(UINT8_C(0)))
+          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3))) == static_cast<left_value_type>(UINT8_C(0))))
       {
         r1    = static_cast<local_double_limb_type>
                 (
@@ -3392,8 +3511,8 @@
                   + detail::make_hi<local_limb_type>(a1b0)
                 )
                 ;
-        *detail::advance_and_point(r, static_cast<result_difference_type>(3))
-              = static_cast<result_value_type>
+        *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(3)))
+              = static_cast<local_limb_type>
                 (
                     detail::make_hi<local_limb_type>(r2)
                   + detail::make_hi<local_limb_type>(a1b1)
@@ -3402,8 +3521,8 @@
       }
       else
       {
-        const auto a0b2 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2))));
-        const auto a2b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0))));
+        const auto a0b2 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2)))));
+        const auto a2b0 = static_cast<local_double_limb_type>(*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0)))));
 
         r1    = static_cast<local_double_limb_type>
                 (
@@ -3429,13 +3548,13 @@
                 )
                 ;
         *detail::advance_and_point(r, static_cast<result_difference_type>(3))
-              = static_cast<result_value_type>
+              = static_cast<local_limb_type>
                 (
                     detail::make_hi<local_limb_type>(r2)
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(3)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(3))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3)))))
                   + detail::make_hi<local_limb_type>(a2b0)
                   + detail::make_hi<local_limb_type>(a1b1)
                   + detail::make_hi<local_limb_type>(a0b2)
@@ -3443,9 +3562,9 @@
                 ;
       }
 
-      *detail::advance_and_point(r, static_cast<result_difference_type>(0)) = static_cast<local_limb_type>(a0b0);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(1)) = static_cast<local_limb_type>(r1);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(2)) = static_cast<local_limb_type>(r2);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(0))) = static_cast<local_limb_type>(a0b0);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(1))) = static_cast<local_limb_type>(r1);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(2))) = static_cast<local_limb_type>(r2);
     }
 
     #if defined(WIDE_INTEGER_HAS_MUL_8_BY_8_UNROLL)
@@ -3471,10 +3590,11 @@
       using local_limb_type = typename std::iterator_traits<ResultIterator>::value_type;
 
       using local_double_limb_type =
-        typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<local_limb_type>::digits * 2)>::exact_unsigned_type;
+        typename detail::uint_type_helper<static_cast<size_t>(static_cast<int>(std::numeric_limits<local_limb_type>::digits * static_cast<int>(INT8_C(2))))>::exact_unsigned_type;
 
       using result_difference_type = typename std::iterator_traits<ResultIterator>::difference_type;
       using left_difference_type   = typename std::iterator_traits<InputIteratorLeft>::difference_type;
+      using left_value_type        = typename std::iterator_traits<InputIteratorLeft>::value_type;
       using right_difference_type  = typename std::iterator_traits<InputIteratorRight>::difference_type;
 
       // The algorithm has been derived from the polynomial multiplication.
@@ -3498,28 +3618,28 @@
       // https://www.wolframalpha.com/input/?i=Column%5BCoefficientList%5B+++Expand%5B%28a0+%2B+a1+x+%2B+a2+x%5E2+%2B+a3+x%5E3%29+%28b0+%2B+b1+x+%2B+b2+x%5E2+%2B+b3+x%5E3%29%5D%2C++++x%5D%5D
       // ... and take the upper half of the pyramid.
 
-      const local_double_limb_type a0b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0)));
+      const local_double_limb_type a0b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
 
-      const local_double_limb_type a1b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0)));
-      const local_double_limb_type a0b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1)));
+      const local_double_limb_type a1b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+      const local_double_limb_type a0b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
 
-      const local_double_limb_type a2b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0)));
-      const local_double_limb_type a1b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1)));
-      const local_double_limb_type a0b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2)));
+      const local_double_limb_type a2b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+      const local_double_limb_type a1b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
+      const local_double_limb_type a0b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))));
 
-      const local_double_limb_type a3b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(3)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(0)));
-      const local_double_limb_type a2b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1)));
-      const local_double_limb_type a1b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2)));
-      const local_double_limb_type a0b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(0)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(3)));
+      const local_double_limb_type a3b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+      const local_double_limb_type a2b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
+      const local_double_limb_type a1b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))));
+      const local_double_limb_type a0b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3))));
 
-      const local_double_limb_type a3b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(3)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(1)));
-      const local_double_limb_type a2b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2)));
-      const local_double_limb_type a1b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(1)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(3)));
+      const local_double_limb_type a3b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
+      const local_double_limb_type a2b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))));
+      const local_double_limb_type a1b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3))));
 
-      const local_double_limb_type a3b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(3)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(2)));
-      const local_double_limb_type a2b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(2)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(3)));
+      const local_double_limb_type a3b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))));
+      const local_double_limb_type a2b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3))));
 
-      const local_double_limb_type a3b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(3)) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(3)));
+      const local_double_limb_type a3b3 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3))));
 
             local_double_limb_type rd1;
             local_double_limb_type rd2;
@@ -3532,10 +3652,10 @@
       // of the form BITS/2 * BITS/2 = BITS. In this case, the algorithm
       // can be significantly simplified by using only the 'lower-halves'
       // of the data.
-      if(    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(7))) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(7))) == 0U)
-          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(6))) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(6))) == 0U)
-          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(5))) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(5))) == 0U)
-          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(4))) == 0U) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(4))) == 0U))
+      if(    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(7))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(7))) == static_cast<left_value_type>(UINT8_C(0)))
+          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(6))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(6))) == static_cast<left_value_type>(UINT8_C(0)))
+          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(5))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(5))) == static_cast<left_value_type>(UINT8_C(0)))
+          && (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(4))) == static_cast<left_value_type>(UINT8_C(0))) && (*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(4))) == static_cast<left_value_type>(UINT8_C(0))))
       {
         rd1   = static_cast<local_double_limb_type>
                 (
@@ -3602,7 +3722,7 @@
                 + detail::make_hi<local_limb_type>(a2b3)
                 ;
 
-        *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(7)))
+        *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(7)))
               = static_cast<local_limb_type>
                 (
                     detail::make_hi<local_limb_type>(rd6)
@@ -3612,23 +3732,23 @@
       }
       else
       {
-        const local_double_limb_type a4b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(0))));
-        const local_double_limb_type a0b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(4))));
+        const local_double_limb_type a4b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+        const local_double_limb_type a0b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(4))));
 
-        const local_double_limb_type a5b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(0))));
-        const local_double_limb_type a4b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(1))));
+        const local_double_limb_type a5b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+        const local_double_limb_type a4b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
 
-        const local_double_limb_type a1b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(4))));
-        const local_double_limb_type a0b5 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(5))));
+        const local_double_limb_type a1b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(4))));
+        const local_double_limb_type a0b5 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(5))));
 
-        const local_double_limb_type a6b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(6))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(0))));
-        const local_double_limb_type a5b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(1))));
+        const local_double_limb_type a6b0 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(6))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0))));
+        const local_double_limb_type a5b1 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1))));
 
-        const local_double_limb_type a4b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(2))));
-        const local_double_limb_type a2b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(4))));
+        const local_double_limb_type a4b2 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2))));
+        const local_double_limb_type a2b4 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(4))));
 
-        const local_double_limb_type a1b5 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(5))));
-        const local_double_limb_type a0b6 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(6))));
+        const local_double_limb_type a1b5 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(5))));
+        const local_double_limb_type a0b6 = *detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(6))));
 
         rd1   = static_cast<local_double_limb_type>
                 (
@@ -3713,18 +3833,18 @@
                 + detail::make_hi<local_limb_type>(a0b5)
                 ;
 
-        *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(7)))
+        *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(7)))
               = static_cast<local_limb_type>
                 (
                     detail::make_hi<local_limb_type>(rd6)
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(7))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(0)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(6))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(1)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(2)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(3)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(4)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(5)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(6)))))
-                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT32_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT32_C(7)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(7))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(0)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(6))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(1)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(5))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(2)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(4))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(3)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(3))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(4)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(2))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(5)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(1))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(6)))))
+                  + static_cast<local_limb_type>    (*detail::advance_and_point(a, static_cast<left_difference_type>(INT8_C(0))) * static_cast<local_double_limb_type>(*detail::advance_and_point(b, static_cast<right_difference_type>(INT8_C(7)))))
                   + detail::make_hi<local_limb_type>(a6b0)
                   + detail::make_hi<local_limb_type>(a5b1)
                   + detail::make_hi<local_limb_type>(a4b2)
@@ -3736,13 +3856,13 @@
                 ;
       }
 
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(0))) = static_cast<local_limb_type>(a0b0);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(1))) = static_cast<local_limb_type>(rd1);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(2))) = static_cast<local_limb_type>(rd2);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(3))) = static_cast<local_limb_type>(rd3);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(4))) = static_cast<local_limb_type>(rd4);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(5))) = static_cast<local_limb_type>(rd5);
-      *detail::advance_and_point(r, static_cast<result_difference_type>(INT32_C(6))) = static_cast<local_limb_type>(rd6);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(0))) = static_cast<local_limb_type>(a0b0);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(1))) = static_cast<local_limb_type>(rd1);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(2))) = static_cast<local_limb_type>(rd2);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(3))) = static_cast<local_limb_type>(rd3);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(4))) = static_cast<local_limb_type>(rd4);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(5))) = static_cast<local_limb_type>(rd5);
+      *detail::advance_and_point(r, static_cast<result_difference_type>(INT8_C(6))) = static_cast<local_limb_type>(rd6);
     }
     #endif
 
@@ -3995,7 +4115,7 @@
       using local_limb_type = typename std::iterator_traits<InputIteratorLeft>::value_type;
 
       using local_double_limb_type =
-        typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<local_limb_type>::digits * 2)>::exact_unsigned_type;
+        typename detail::uint_type_helper<static_cast<size_t>(static_cast<int>(std::numeric_limits<local_limb_type>::digits * static_cast<int>(INT8_C(2))))>::exact_unsigned_type;
 
       auto i = static_cast<unsigned_fast_type>(UINT8_C(0));
 
@@ -4026,7 +4146,7 @@
       using local_limb_type = typename std::iterator_traits<InputIteratorLeft>::value_type;
 
       using local_double_limb_type =
-        typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<local_limb_type>::digits * 2)>::exact_unsigned_type;
+        typename detail::uint_type_helper<static_cast<size_t>(static_cast<int>(std::numeric_limits<local_limb_type>::digits * static_cast<int>(INT8_C(2))))>::exact_unsigned_type;
 
       auto i = static_cast<unsigned_fast_type>(UINT8_C(0));
 
@@ -4145,19 +4265,17 @@
         eval_multiply_kara_n_by_n_to_2n(r0, a0, b0, nh, t0);
         detail::copy_unsafe(r0, detail::advance_and_point(r0, static_cast<result_difference_type>(static_cast<result_difference_type>(n) * static_cast<result_difference_type>(2U))), t0);
 
-        local_limb_type carry;
-
         // Step 2
         //   r1 += a1*b1
         //   r1 += a0*b0
-        carry = eval_add_n(r1, r1, t2, n);
+        auto carry = static_cast<local_limb_type>(eval_add_n(r1, r1, t2, n));
         eval_multiply_kara_propagate_carry(r3, nh, carry);
-        carry = eval_add_n(r1, r1, t0, n);
+        carry = static_cast<local_limb_type>(eval_add_n(r1, r1, t0, n));
         eval_multiply_kara_propagate_carry(r3, nh, carry);
 
         // Step 3
         //   |a1-a0| -> t0
-        const std::int_fast8_t cmp_result_a1a0 = compare_ranges(a1, a0, nh);
+        const auto cmp_result_a1a0 = compare_ranges(a1, a0, nh);
 
         if(cmp_result_a1a0 == static_cast<std::int_fast8_t>(INT8_C(1)))
         {
@@ -4288,7 +4406,7 @@
     }
 
     template<const size_t RePhraseWidth2 = Width2,
-             std::enable_if_t<(RePhraseWidth2 > std::numeric_limits<limb_type>::digits)> const* = nullptr>
+             std::enable_if_t<(RePhraseWidth2 > static_cast<size_t>(std::numeric_limits<limb_type>::digits))> const* = nullptr>
     WIDE_INTEGER_CONSTEXPR auto eval_divide_knuth_core(const unsigned_fast_type u_offset, // NOLINT(readability-function-cognitive-complexity)
                                                        const unsigned_fast_type v_offset,
                                                        const uintwide_t& other,
@@ -4331,12 +4449,12 @@
         uu_array_type uu;
 
         representation_type
-        vv
-        {
-          static_cast<typename representation_type::size_type>(number_of_limbs),
-          static_cast<typename representation_type::value_type>(UINT8_C(0)),
-          typename representation_type::allocator_type() // LCOV_EXCL_LINE
-        };
+          vv
+          {
+            static_cast<typename representation_type::size_type>(number_of_limbs),
+            static_cast<typename representation_type::value_type>(UINT8_C(0)),
+            typename representation_type::allocator_type() // LCOV_EXCL_LINE
+          };
 
         if(d > static_cast<limb_type>(UINT8_C(1)))
         {
@@ -4425,40 +4543,48 @@
             }
           }
 
-          // Step D4: Multiply and subtract.
-          // Replace u[j, ... j + n] by u[j, ... j + n] - q_hat * v[1, ... n].
-
-          // Set nv = q_hat * (v[1, ... n]).
-          uu_array_type nv { };
-
-          *(nv.begin() + static_cast<size_t>(n)) = eval_multiply_1d(nv.begin(), vv.cbegin(), q_hat, n);
-
-          const auto has_borrow =
-            eval_subtract_n(detail::advance_and_point(uu.begin(),  static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
-                            detail::advance_and_point(uu.cbegin(), static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
-                            nv.cbegin(),
-                            n + 1U);
-
-          // Step D5: Test the remainder.
-          // Set the result value: Set result.m_data[m - j] = q_hat.
-          // Use the condition (u[j] < 0), in other words if the borrow
-          // is non-zero, then step D6 needs to be carried out.
-
-          if(has_borrow)
           {
-            --q_hat;
+            // Step D4: Multiply and subtract.
+            // Replace u[j, ... j + n] by u[j, ... j + n] - q_hat * v[1, ... n].
 
-            // Step D6: Add back.
-            // Add v[1, ... n] back to u[j, ... j + n],
-            // and decrease the result by 1.
+            // Set nv = q_hat * (v[1, ... n]).
+            uu_array_type nv { };
 
-            static_cast<void>
-            (
-              eval_add_n(uu.begin() + static_cast<size_t>(static_cast<local_uint_index_type>(uj - n)),
-                         detail::advance_and_point(uu.cbegin(), static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
-                         vv.cbegin(),
-                         n)
-            );
+            *(nv.begin() + static_cast<size_t>(n)) = eval_multiply_1d(nv.begin(), vv.cbegin(), q_hat, n);
+
+            const auto has_borrow =
+              eval_subtract_n
+              (
+                detail::advance_and_point(uu.begin(),  static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
+                detail::advance_and_point(uu.cbegin(), static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
+                nv.cbegin(),
+                static_cast<unsigned_fast_type>
+                (
+                  static_cast<local_uint_index_type>(n + static_cast<local_uint_index_type>(UINT8_C(1)))
+                )
+              );
+
+            // Step D5: Test the remainder.
+            // Set the result value: Set result.m_data[m - j] = q_hat.
+            // Use the condition (u[j] < 0), in other words if the borrow
+            // is non-zero, then step D6 needs to be carried out.
+
+            if(has_borrow)
+            {
+              --q_hat;
+
+              // Step D6: Add back.
+              // Add v[1, ... n] back to u[j, ... j + n],
+              // and decrease the result by 1.
+
+              static_cast<void>
+              (
+                eval_add_n(uu.begin() + static_cast<size_t>(static_cast<local_uint_index_type>(uj - n)),
+                           detail::advance_and_point(uu.cbegin(), static_cast<size_t>(static_cast<local_uint_index_type>(uj - n))),
+                           vv.cbegin(),
+                           static_cast<unsigned_fast_type>(n))
+              );
+            }
           }
 
           // Get the result data.
@@ -4512,8 +4638,14 @@
             for( ; rl_it_rev != remainder->values.rend(); ++rl_it_rev, --ul) // NOLINT(altera-id-dependent-backward-branch)
             {
               const auto t =
-                static_cast<double_limb_type>(  *(uu.cbegin() + static_cast<size_t>(ul))
-                                              + static_cast<double_limb_type>(static_cast<double_limb_type>(previous_u) << static_cast<unsigned>(std::numeric_limits<limb_type>::digits)));
+                static_cast<double_limb_type>
+                (
+                    *(uu.cbegin() + static_cast<size_t>(ul))
+                  + static_cast<double_limb_type>
+                    (
+                      static_cast<double_limb_type>(previous_u) << static_cast<unsigned>(std::numeric_limits<limb_type>::digits)
+                    )
+                );
 
               *rl_it_rev = static_cast<limb_type>(static_cast<double_limb_type>(t / d));
               previous_u = static_cast<limb_type>(static_cast<double_limb_type>(t - static_cast<double_limb_type>(static_cast<double_limb_type>(d) * *rl_it_rev)));
@@ -4526,7 +4658,7 @@
     }
 
     template<const size_t RePhraseWidth2 = Width2,
-             std::enable_if_t<(RePhraseWidth2 <= std::numeric_limits<limb_type>::digits)> const* = nullptr>
+             std::enable_if_t<(RePhraseWidth2 <= static_cast<size_t>(std::numeric_limits<limb_type>::digits))> const* = nullptr>
     WIDE_INTEGER_CONSTEXPR auto eval_divide_knuth_core(const unsigned_fast_type u_offset,
                                                        const unsigned_fast_type v_offset,
                                                        const uintwide_t& other,
@@ -4536,7 +4668,7 @@
 
       // The denominator has one single limb.
       // Use a one-dimensional division algorithm.
-      const limb_type short_denominator = *other.values.cbegin();
+      const auto short_denominator = static_cast<limb_type>(*other.values.cbegin());
 
       eval_divide_by_single_limb(short_denominator, u_offset, remainder);
     }
@@ -4585,7 +4717,7 @@
 
         while(ai != values.end()) // NOLINT(altera-id-dependent-backward-branch)
         {
-          const limb_type t = *ai;
+          const auto t = *ai;
 
           *ai++ =
             static_cast<limb_type>
@@ -4594,11 +4726,17 @@
               | part_from_previous_value
             );
 
-          part_from_previous_value =
-            static_cast<limb_type>
+          const auto right_shift_previous_value =
+            static_cast<local_integral_type>
             (
-              t >> static_cast<local_integral_type>(static_cast<unsigned_fast_type>(std::numeric_limits<limb_type>::digits - left_shift_amount))
+              static_cast<unsigned_fast_type>
+              (
+                  static_cast<std::int_fast32_t>(std::numeric_limits<limb_type>::digits)
+                - static_cast<std::int_fast32_t>(left_shift_amount)
+              )
             );
+
+          part_from_previous_value = static_cast<limb_type>(t >> right_shift_previous_value);
         }
       }
     }
@@ -4650,11 +4788,21 @@
 
         while(r_ai != values.rend()) // NOLINT(altera-id-dependent-backward-branch)
         {
-          const limb_type t = *r_ai;
+          const auto t = *r_ai;
 
           *r_ai++ = static_cast<limb_type>(static_cast<limb_type>(t >> static_cast<local_integral_type>(right_shift_amount)) | part_from_previous_value);
 
-          part_from_previous_value = static_cast<limb_type>(t << static_cast<local_integral_type>(static_cast<unsigned_fast_type>(std::numeric_limits<limb_type>::digits - right_shift_amount)));
+          const auto left_shift_previous_value =
+            static_cast<local_integral_type>
+            (
+              static_cast<unsigned_fast_type>
+              (
+                  static_cast<std::int_fast32_t>(std::numeric_limits<limb_type>::digits)
+                - static_cast<std::int_fast32_t>(right_shift_amount)
+              )
+            );
+
+          part_from_previous_value = static_cast<limb_type>(t << left_shift_previous_value);
         }
       }
     }
@@ -4689,28 +4837,28 @@
       }
 
       // Perform a dynamic detection of the base.
-      if(str_length > static_cast<unsigned_fast_type>(pos + static_cast<unsigned_fast_type>(UINT8_C(0))))
+      if(str_length > static_cast<unsigned_fast_type>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(0))))
       {
-        const bool might_be_oct_or_hex = ((str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(0)))] == '0') && (str_length > static_cast<unsigned_fast_type>(pos + static_cast<unsigned_fast_type>(UINT8_C(0))))); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        const auto might_be_oct_or_hex = ((str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(0)))] == '0') && (str_length > static_cast<unsigned_fast_type>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(0))))); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
         if(might_be_oct_or_hex)
         {
-          if((str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(1)))] >= '0') && (str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(1)))] <= '8')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+          if((str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(1)))] >= '0') && (str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(1)))] <= '8')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           {
             // The input format is octal.
             base = static_cast<std::uint_fast8_t>(UINT8_C(8));
 
-            pos = static_cast<unsigned_fast_type>(pos + static_cast<unsigned_fast_type>(UINT8_C(1)));
+            pos = static_cast<unsigned_fast_type>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(1)));
           }
-          else if((str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(1)))] == 'x') || (str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(1)))] == 'X')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+          else if((str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(1)))] == 'x') || (str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(1)))] == 'X')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           {
             // The input format is hexadecimal.
             base = static_cast<std::uint_fast8_t>(UINT8_C(16));
 
-            pos = static_cast<unsigned_fast_type>(pos + static_cast<unsigned_fast_type>(UINT8_C(2)));
+            pos = static_cast<unsigned_fast_type>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(2)));
           }
         }
-        else if((str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(0)))] >= '0') && (str_input[static_cast<std::size_t>(pos + static_cast<unsigned_fast_type>(UINT8_C(0)))] <= '9')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        else if((str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(0)))] >= '0') && (str_input[static_cast<std::size_t>(static_cast<std::size_t>(pos) + static_cast<std::size_t>(UINT8_C(0)))] <= '9')) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         {
           // The input format is decimal.
           ;
@@ -4735,7 +4883,7 @@
             {
               const auto uc_oct = static_cast<std::uint8_t>(c - static_cast<char>(UINT8_C(0x30)));
 
-              operator<<=(static_cast<unsigned>(UINT8_C(3)));
+              static_cast<void>(operator<<=(static_cast<unsigned>(UINT8_C(3))));
 
               *values.begin() = static_cast<limb_type>(*values.begin() | uc_oct);
             }
@@ -4748,9 +4896,9 @@
             {
               const auto uc_dec = static_cast<std::uint8_t>(c - static_cast<char>(UINT8_C(0x30)));
 
-              mul_by_limb(static_cast<limb_type>(UINT8_C(10)));
+              static_cast<void>(mul_by_limb(static_cast<limb_type>(UINT8_C(10))));
 
-              operator+=(uc_dec);
+              static_cast<void>(operator+=(uc_dec));
             }
           }
           else if(base == static_cast<std::uint_fast8_t>(UINT8_C(16)))
@@ -4769,7 +4917,7 @@
               else if(char_is_a_to_f_hi) { uc_hex = static_cast<std::uint8_t>(c - static_cast<char>(UINT8_C(  55))); }
               else if(char_is_0_to_9)    { uc_hex = static_cast<std::uint8_t>(c - static_cast<char>(UINT8_C(0x30))); }
 
-              operator<<=(static_cast<unsigned>(UINT8_C(4)));
+              static_cast<void>(operator<<=(static_cast<unsigned>(UINT8_C(4))));
 
               *values.begin() = static_cast<limb_type>(*values.begin() | uc_hex);
             }
@@ -5419,11 +5567,11 @@
     auto x = static_cast<std::uint_fast32_t>(u);
 
     // Use O(log2[N]) binary-halving in an unrolled loop to find the msb.
-    if((x & UINT32_C(0xFFFF0000)) != UINT32_C(0)) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C(16))); r = static_cast<unsigned_fast_type>(r | UINT32_C(16)); }
-    if((x & UINT32_C(0x0000FF00)) != UINT32_C(0)) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 8))); r = static_cast<unsigned_fast_type>(r | UINT32_C( 8)); }
-    if((x & UINT32_C(0x000000F0)) != UINT32_C(0)) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 4))); r = static_cast<unsigned_fast_type>(r | UINT32_C( 4)); }
-    if((x & UINT32_C(0x0000000C)) != UINT32_C(0)) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 2))); r = static_cast<unsigned_fast_type>(r | UINT32_C( 2)); }
-    if((x & UINT32_C(0x00000002)) != UINT32_C(0)) {                                                                               r = static_cast<unsigned_fast_type>(r | UINT32_C( 1)); }
+    if(static_cast<std::uint_fast32_t>(x & static_cast<std::uint_fast32_t>(UINT32_C(0xFFFF0000))) != static_cast<std::uint_fast32_t>(UINT8_C(0))) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C(16))); r = static_cast<unsigned_fast_type>(r | static_cast<unsigned_fast_type>(UINT8_C(16))); }
+    if(static_cast<std::uint_fast32_t>(x & static_cast<std::uint_fast32_t>(UINT32_C(0x0000FF00))) != static_cast<std::uint_fast32_t>(UINT8_C(0))) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 8))); r = static_cast<unsigned_fast_type>(r | static_cast<unsigned_fast_type>(UINT8_C( 8))); }
+    if(static_cast<std::uint_fast32_t>(x & static_cast<std::uint_fast32_t>(UINT32_C(0x000000F0))) != static_cast<std::uint_fast32_t>(UINT8_C(0))) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 4))); r = static_cast<unsigned_fast_type>(r | static_cast<unsigned_fast_type>(UINT8_C( 4))); }
+    if(static_cast<std::uint_fast32_t>(x & static_cast<std::uint_fast32_t>(UINT32_C(0x0000000C))) != static_cast<std::uint_fast32_t>(UINT8_C(0))) { x = static_cast<std::uint_fast32_t>(x >> static_cast<unsigned>(UINT8_C( 2))); r = static_cast<unsigned_fast_type>(r | static_cast<unsigned_fast_type>(UINT8_C( 2))); }
+    if(static_cast<std::uint_fast32_t>(x & static_cast<std::uint_fast32_t>(UINT32_C(0x00000002))) != static_cast<std::uint_fast32_t>(UINT8_C(0))) {                                                                               r = static_cast<unsigned_fast_type>(r | static_cast<unsigned_fast_type>(UINT8_C( 1))); }
 
     return r;
   }
@@ -5884,68 +6032,13 @@
   namespace detail {
 
   template<typename UnsignedShortType>
-  WIDE_INTEGER_CONSTEXPR auto integer_gcd_reduce_short(UnsignedShortType u, UnsignedShortType v) -> UnsignedShortType
+  WIDE_INTEGER_CONSTEXPR auto integer_gcd_reduce(UnsignedShortType u, UnsignedShortType v) -> UnsignedShortType
   {
-    // This implementation of GCD reduction is based on an
-    // adaptation of existing code from Boost.Multiprecision.
-
-    for(;;)
-    {
-      if(u > v)
-      {
-        std::swap(u, v);
-      }
-
-      if(u == v)
-      {
-        break;
-      }
-
-      v  -= u;
-      v >>= detail::lsb_helper(v);
-    }
-
-    return u;
-  }
-
-  template<typename UnsignedLargeType>
-  WIDE_INTEGER_CONSTEXPR auto integer_gcd_reduce_large(UnsignedLargeType u, UnsignedLargeType v) -> UnsignedLargeType
-  {
-    // This implementation of GCD reduction is based on an
-    // adaptation of existing code from Boost.Multiprecision.
-
-    using local_ularge_type = UnsignedLargeType;
-    using local_ushort_type = typename detail::uint_type_helper<static_cast<size_t>(std::numeric_limits<local_ularge_type>::digits / 2)>::exact_unsigned_type;
-
-    for(;;)
-    {
-      if(u > v)
-      {
-        std::swap(u, v);
-      }
-
-      if(u == v)
-      {
-        break;
-      }
-
-      if(v <= static_cast<local_ularge_type>((std::numeric_limits<local_ushort_type>::max)()))
-      {
-        u = integer_gcd_reduce_short(static_cast<local_ushort_type>(v),
-                                     static_cast<local_ushort_type>(u));
-
-        break;
-      }
-
-      v -= u;
-
-      while(static_cast<std::uint_fast8_t>(static_cast<std::uint_fast8_t>(v) & static_cast<std::uint_fast8_t>(UINT8_C(1))) == static_cast<std::uint_fast8_t>(UINT8_C(0))) // NOLINT(hicpp-signed-bitwise,altera-id-dependent-backward-branch)
-      {
-        v >>= static_cast<unsigned>(UINT8_C(1));
-      }
-    }
-
-    return u;
+    #if (defined(__cpp_lib_gcd_lcm) && (__cpp_lib_gcd_lcm >= 201606L))
+    return std::gcd(u, v);
+    #else
+    return detail::gcd_unsafe(u, v);
+    #endif
   }
 
   } // namespace detail
@@ -5975,18 +6068,16 @@
     using local_size_type = typename local_wide_integer_type::representation_type::size_type;
 
     if(u == v)
-    {
+    { // NOLINT(bugprone-branch-clone)
       // This handles cases having (u = v) and also (u = v = 0).
       result = u; // LCOV_EXCL_LINE
     }
-
-    if((static_cast<local_ushort_type>(v) == static_cast<local_ushort_type>(UINT8_C(0))) && (v == 0U))
+    else if((static_cast<local_ushort_type>(v) == static_cast<local_ushort_type>(UINT8_C(0))) && (v == 0U))
     {
       // This handles cases having (v = 0) with (u != 0).
       result = u; // LCOV_EXCL_LINE
     }
-
-    if((static_cast<local_ushort_type>(u) == static_cast<local_ushort_type>(UINT8_C(0))) && (u == 0U))
+    else if((static_cast<local_ushort_type>(u) == static_cast<local_ushort_type>(UINT8_C(0))) && (u == 0U))
     {
       // This handles cases having (u = 0) with (v != 0).
       result = v;
@@ -6028,7 +6119,7 @@
             const auto vs = *v.crepresentation().cbegin();
             const auto us = *u.crepresentation().cbegin();
 
-            u = detail::integer_gcd_reduce_short(vs, us);
+            u = detail::integer_gcd_reduce(vs, us);
           }
           else
           {
@@ -6051,7 +6142,7 @@
             const local_ularge_type v_large = detail::make_large(*v.crepresentation().cbegin(), my_v_hi);
             const local_ularge_type u_large = detail::make_large(*u.crepresentation().cbegin(), my_u_hi);
 
-            u = detail::integer_gcd_reduce_large(v_large, u_large);
+            u = detail::integer_gcd_reduce(v_large, u_large);
           }
 
           break;
@@ -6071,38 +6162,7 @@
   WIDE_INTEGER_CONSTEXPR auto gcd(const UnsignedShortType& u, const UnsignedShortType& v) -> std::enable_if_t<(   (std::is_integral<UnsignedShortType>::value)
                                                                                                                && (std::is_unsigned<UnsignedShortType>::value)), UnsignedShortType>
   {
-    using local_unsigned_short_type = UnsignedShortType;
-
-    auto result = local_unsigned_short_type { };
-
-    if(u > v)
-    {
-      result = gcd(v, u);
-    }
-
-    if(u == v)
-    {
-      // This handles cases having (u = v) and also (u = v = 0).
-      result = u;
-    }
-
-    if(v == static_cast<local_unsigned_short_type>(UINT8_C(0)))
-    {
-      // This handles cases having (v = 0) with (u != 0).
-      result = u;
-    }
-
-    if(u == static_cast<local_unsigned_short_type>(UINT8_C(0)))
-    {
-      // This handles cases having (u = 0) with (v != 0).
-      result = v;
-    }
-    else
-    {
-      result = detail::integer_gcd_reduce_short(u, v);
-    }
-
-    return result;
+    return detail::gcd_unsafe(u, v);
   }
 
   namespace detail {
@@ -6387,7 +6447,7 @@
 
       constexpr auto digits_generator_result_type = static_cast<std::uint32_t>(GeneratorResultBits);
 
-      static_assert(static_cast<std::uint32_t>(digits_generator_result_type % static_cast<std::uint32_t>(UINT8_C(8))) == static_cast<std::uint32_t>(UINT32_C(0)),
+      static_assert(static_cast<std::uint32_t>(digits_generator_result_type % static_cast<std::uint32_t>(UINT8_C(8))) == static_cast<std::uint32_t>(UINT8_C(0)),
                     "Error: Generator result type must have a multiple of 8 bits.");
 
       constexpr auto digits_limb_ratio =
@@ -6397,7 +6457,7 @@
 
       generator_result_type value = generator_result_type();
 
-      auto it = result.representation().begin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto)
+      auto it = result.representation().begin(); // NOLINT(llvm-qualified-auto,readability-qualified-auto,altera-id-dependent-backward-branch)
 
       auto j = static_cast<unsigned_fast_type>(UINT8_C(0));
 
@@ -6536,14 +6596,14 @@
         // See also:
         // https://www.wolframalpha.com/input/?i=Table%5BPrime%5Bi%5D%2C+%7Bi%2C+2%2C+49%7D%5D
 
-        constexpr std::array<local_limb_type, 48U> small_primes =
+        constexpr std::array<local_limb_type, static_cast<std::size_t>(UINT8_C(48))> small_primes =
         {{
-          UINT8_C(  3), UINT8_C(  5), UINT8_C(  7), UINT8_C( 11), UINT8_C( 13), UINT8_C( 17), UINT8_C( 19), UINT8_C( 23),
-          UINT8_C( 29), UINT8_C( 31), UINT8_C( 37), UINT8_C( 41), UINT8_C( 43), UINT8_C( 47), UINT8_C( 53), UINT8_C( 59),
-          UINT8_C( 61), UINT8_C( 67), UINT8_C( 71), UINT8_C( 73), UINT8_C( 79), UINT8_C( 83), UINT8_C( 89), UINT8_C( 97),
-          UINT8_C(101), UINT8_C(103), UINT8_C(107), UINT8_C(109), UINT8_C(113), UINT8_C(127), UINT8_C(131), UINT8_C(137),
-          UINT8_C(139), UINT8_C(149), UINT8_C(151), UINT8_C(157), UINT8_C(163), UINT8_C(167), UINT8_C(173), UINT8_C(179),
-          UINT8_C(181), UINT8_C(191), UINT8_C(193), UINT8_C(197), UINT8_C(199), UINT8_C(211), UINT8_C(223), UINT8_C(227)
+          static_cast<local_limb_type>(UINT8_C(  3)), static_cast<local_limb_type>(UINT8_C(  5)), static_cast<local_limb_type>(UINT8_C(  7)), static_cast<local_limb_type>(UINT8_C( 11)), static_cast<local_limb_type>(UINT8_C( 13)), static_cast<local_limb_type>(UINT8_C( 17)), static_cast<local_limb_type>(UINT8_C( 19)), static_cast<local_limb_type>(UINT8_C( 23)),
+          static_cast<local_limb_type>(UINT8_C( 29)), static_cast<local_limb_type>(UINT8_C( 31)), static_cast<local_limb_type>(UINT8_C( 37)), static_cast<local_limb_type>(UINT8_C( 41)), static_cast<local_limb_type>(UINT8_C( 43)), static_cast<local_limb_type>(UINT8_C( 47)), static_cast<local_limb_type>(UINT8_C( 53)), static_cast<local_limb_type>(UINT8_C( 59)),
+          static_cast<local_limb_type>(UINT8_C( 61)), static_cast<local_limb_type>(UINT8_C( 67)), static_cast<local_limb_type>(UINT8_C( 71)), static_cast<local_limb_type>(UINT8_C( 73)), static_cast<local_limb_type>(UINT8_C( 79)), static_cast<local_limb_type>(UINT8_C( 83)), static_cast<local_limb_type>(UINT8_C( 89)), static_cast<local_limb_type>(UINT8_C( 97)),
+          static_cast<local_limb_type>(UINT8_C(101)), static_cast<local_limb_type>(UINT8_C(103)), static_cast<local_limb_type>(UINT8_C(107)), static_cast<local_limb_type>(UINT8_C(109)), static_cast<local_limb_type>(UINT8_C(113)), static_cast<local_limb_type>(UINT8_C(127)), static_cast<local_limb_type>(UINT8_C(131)), static_cast<local_limb_type>(UINT8_C(137)),
+          static_cast<local_limb_type>(UINT8_C(139)), static_cast<local_limb_type>(UINT8_C(149)), static_cast<local_limb_type>(UINT8_C(151)), static_cast<local_limb_type>(UINT8_C(157)), static_cast<local_limb_type>(UINT8_C(163)), static_cast<local_limb_type>(UINT8_C(167)), static_cast<local_limb_type>(UINT8_C(173)), static_cast<local_limb_type>(UINT8_C(179)),
+          static_cast<local_limb_type>(UINT8_C(181)), static_cast<local_limb_type>(UINT8_C(191)), static_cast<local_limb_type>(UINT8_C(193)), static_cast<local_limb_type>(UINT8_C(197)), static_cast<local_limb_type>(UINT8_C(199)), static_cast<local_limb_type>(UINT8_C(211)), static_cast<local_limb_type>(UINT8_C(223)), static_cast<local_limb_type>(UINT8_C(227))
         }};
 
         return std::binary_search(small_primes.cbegin(),
@@ -6562,7 +6622,7 @@
 
       const auto m0 = static_cast<std::uint64_t>(np % pp0);
 
-      if(detail::integer_gcd_reduce_large(m0, pp0) != static_cast<std::uint64_t>(UINT8_C(1)))
+      if((m0 == static_cast<std::uint64_t>(UINT8_C(0))) || (detail::integer_gcd_reduce(m0, pp0) != static_cast<std::uint64_t>(UINT8_C(1))))
       {
         return false;
       }
@@ -6576,7 +6636,7 @@
 
       const auto m1 = static_cast<std::uint64_t>(np % pp1);
 
-      if(detail::integer_gcd_reduce_large(m1, pp1) != static_cast<std::uint64_t>(UINT8_C(1)))
+      if((m1 == static_cast<std::uint64_t>(UINT8_C(0))) || (detail::integer_gcd_reduce(m1, pp1) != static_cast<std::uint64_t>(UINT8_C(1))))
       {
         return false;
       }
@@ -6590,7 +6650,7 @@
 
       const auto m2 = static_cast<std::uint64_t>(np % pp2);
 
-      if(detail::integer_gcd_reduce_large(m2, pp2) != static_cast<std::uint64_t>(UINT8_C(1)))
+      if((m2 == static_cast<std::uint64_t>(UINT8_C(0))) || (detail::integer_gcd_reduce(m2, pp2) != static_cast<std::uint64_t>(UINT8_C(1))))
       {
         return false;
       }
@@ -6604,7 +6664,7 @@
 
       const auto m3 = static_cast<std::uint64_t>(np % pp3);
 
-      if(detail::integer_gcd_reduce_large(m3, pp3) != static_cast<std::uint64_t>(UINT8_C(1)))
+      if((m3 == static_cast<std::uint64_t>(UINT8_C(0))) || (detail::integer_gcd_reduce(m3, pp3) != static_cast<std::uint64_t>(UINT8_C(1))))
       {
         return false;
       }
@@ -6618,13 +6678,13 @@
 
       const auto m4 = static_cast<std::uint64_t>(np % pp4);
 
-      if(detail::integer_gcd_reduce_large(m4, pp4) != static_cast<std::uint64_t>(UINT8_C(1)))
+      if((m4 == static_cast<std::uint64_t>(UINT8_C(0))) || (detail::integer_gcd_reduce(m4, pp4) != static_cast<std::uint64_t>(UINT8_C(1))))
       {
         return false;
       }
     }
 
-    const local_wide_integer_type nm1(np - 1U);
+    const auto nm1 = static_cast<local_wide_integer_type>(np - static_cast<unsigned>(UINT8_C(1)));
 
     // Since we have already excluded all small factors
     // up to and including 227, n is greater than 227.
@@ -6655,8 +6715,8 @@
 
     auto i = static_cast<unsigned_fast_type>(UINT8_C(0));
 
-    local_wide_integer_type x;
-    local_wide_integer_type y;
+    auto x = local_wide_integer_type { };
+    auto y = local_wide_integer_type { };
 
     // Execute the random trials.
     do
@@ -6705,7 +6765,7 @@
     return is_probably_prime;
   }
 
-  #if defined(__cpp_lib_to_chars)
+  #if (defined(__cpp_lib_to_chars) && (__cpp_lib_to_chars >= 201611L))
   template<const size_t Width2,
            typename LimbType,
            typename AllocatorType,
