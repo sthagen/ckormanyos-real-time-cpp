@@ -13,24 +13,32 @@ instances of `std::reference_wrapper` from the `<functional>` library.
 This is because C++ can not store references in STL containers such as
 `std::array`.
 
-The container of wrapped LED base class references looks
-like this:
+The container of wrapped LED base class references is shown in pseudo-code
+below. It is a singleton-object in the `app_led_base_class_array()`
+subroutine.
 
 ```cpp
-#include <functional>
+// ...
+
+  using app_led_type = mcal::led::led_base;
+
+  using app_led_array_type = std::array<std::reference_wrapper<app_led_type>, static_cast<std::size_t>(UINT8_C(5))>;
 
 // ...
 
-using app_led_ref_type = std::reference_wrapper<mcal::led::led_base>;
+app_led_array_type& app_led_base_class_array()
+{
+  static app_led_array_type local_base_class_array
+  {
+    mcal::led::led0(),
+    mcal::led::led1(),
+    mcal::led::led2(),
+    mcal::led::led3(),
+    mcal::led::led4()
+  };
 
-std::array<app_led_ref_type, 5U> app_led_base_class_refs =
-{{
-  mcal::led::led0(),
-  mcal::led::led1(),
-  mcal::led::led2(),
-  mcal::led::led3(),
-  mcal::led::led4()
-}};
+  return local_base_class_array;
+}
 ```
 
 The elements in the array of LED base class references
@@ -44,7 +52,9 @@ void app::led::task_func()
   {
     app_led_timer.start_interval(app_led_one_sec);
 
-    for(typename app_led_ref_type::type& led : app_led_base_class_refs)
+    auto& local_base_class_array = app_led_base_class_array();
+
+    for(app_led_type& led : local_base_class_array)
     {
       led.toggle();
     }
@@ -56,5 +66,6 @@ void app::led::task_func()
 
 ## Hardware Setup
 
-The hardware setup for example chapter04_04a is the same as that of
-example chapter04_04.
+The hardware setup used here in example chapter04_04a can be
+exactly the same as that used in example
+[chapter04_04](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter04_04).
