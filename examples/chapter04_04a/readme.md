@@ -2,9 +2,11 @@
 ## LED Objects and Polymorphism via References
 
 Example chapter04_04a implements the same basic functionality
-as does example chapter04_04. Example chapter04_04a, however,
-uses an `std::array` of LED base class references instead
-of base class pointers in order to exercise object oriented polymorphism.
+as does example
+[chapter04_04](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter04_04).
+Example chapter04_04a, however,
+uses an `std::array` of LED base class _references_ instead
+of base class _pointers_ in order to exercise object oriented polymorphism.
 
 ## Application Description
 
@@ -14,7 +16,7 @@ This is because C++ can not store references in STL containers such as
 `std::array`.
 
 The container of wrapped LED base class references is shown in pseudo-code
-below. It is a singleton-object in the `app_led_base_class_array()`
+below. It is a singleton-object found in the `app_led_base_class_array()`
 subroutine.
 
 ```cpp
@@ -28,13 +30,11 @@ subroutine.
 
 app_led_array_type& app_led_base_class_array()
 {
+  using namespace mcal::led;
+
   static app_led_array_type local_base_class_array
   {
-    mcal::led::led0(),
-    mcal::led::led1(),
-    mcal::led::led2(),
-    mcal::led::led3(),
-    mcal::led::led4()
+    led0(), led1(), led2(), led3(), led4()
   };
 
   return local_base_class_array;
@@ -42,7 +42,7 @@ app_led_array_type& app_led_base_class_array()
 ```
 
 The elements in the array of LED base class references
-are toggled in the application task each second in the following
+are toggled in the application task once per second in the following
 fashion.
 
 ```cpp

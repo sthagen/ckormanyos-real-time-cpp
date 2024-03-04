@@ -10,37 +10,43 @@ of approximately $\frac{1}{2}~\text{Hz}$.
 ## LED Classes
 
 The class hierarchy consists of an LED base class called
-[`led_base`](https://github.com/ckormanyos/real-time-cpp/blob/26cb8f63b555e7ee6c3afc96ce53646e070aeb67/examples/chapter04_04/src/mcal_led/mcal_led_base.h#L8).
-It is located in namespace `mcal::led`.
-Two LED classes `led_port` and `led_pwm` are derived from the
-LED base class.
+[`led_base`](https://github.com/ckormanyos/real-time-cpp/blob/master/examples/chapter04_04/src/mcal_led/mcal_led_base.h#L15).
+It is located in namespace `mcal::led`. Two additional LED classes,
+[`led_port`](https://github.com/ckormanyos/real-time-cpp/blob/master/examples/chapter04_04/src/mcal_led/mcal_led_port.h#L17)
+and
+[`led_pwm`](https://github.com/ckormanyos/real-time-cpp/blob/master/examples/chapter04_04/src/mcal_led/mcal_led_pwm.h#L16),
+are derived from the LED base class.
+These are used for the application's functionality.
 
-The port class `led_port` itself uses two kinds of ports.
-These include one microcontroller port and three other ports on an external
+The
+[`led_port`](https://github.com/ckormanyos/real-time-cpp/blob/master/examples/chapter04_04/src/mcal_led/mcal_led_port.h#L17)
+class itself utilizes two kinds of digital I/O-ports.
+These include one microcontroller port and three other ports
+located on an external
 serial SPI port expander chip of type MICROCHIP(R) MCP23S17.
-
-The PWM-based LED class controls its LED via dimming
-its associated PWM duty cycle. Toggling is done by
-adjusting the PWM duty cycle back-and-forth,
-switching between $0\\%$ and $100\\%$.
-There is one instantiation of this port class.
 
 The port expander chip is controlled with SPI.
 In this particular example, an all-software bus has been
 developed using four microcontroller port pins toggled
 manually. The SPI communication class
-is derived from a communication base class that provides
-a uniform interface for rudimentary byte read and write
-functions.
+is derived from a
+[`communication`](https://github.com/ckormanyos/real-time-cpp/blob/master/examples/chapter04_04/src/util/utility/util_communication.h#L20)
+base class. It provides a uniform interface
+for rudimentary byte-read and byte-write functions.
+
+The PWM-based LED class controls its LED via dimming
+its associated PWM duty cycle. Toggling is done by
+adjusting the PWM duty cycle, switching
+back-and-forth between $0\\%$ and $100\\%$.
+There is one instantiation of this type of PWM-based LED class.
 
 ## Application Description
 
 The application places five LED base class pointers in an
 `std::array` and subsequently toggles them in a range-based
 `for`-loop in the application task.
-
 The array of LED base class pointers is shown in pseudo-code
-below. It is a singleton-object in the `app_led_base_class_array()`
+below. It is a singleton-object found in the `app_led_base_class_array()`
 subroutine.
 
 ```cpp
@@ -54,13 +60,11 @@ using app_led_array_type = std::array<app_led_type*, static_cast<std::size_t>(UI
 
 app_led_array_type& app_led_base_class_array()
 {
+  using namespace mcal::led;
+
   static app_led_array_type local_base_class_array
   {
-    mcal::led::led0(),
-    mcal::led::led1(),
-    mcal::led::led2(),
-    mcal::led::led3(),
-    mcal::led::led4()
+    led0(), led1(), led2(), led3(), led4()
   };
 
   return local_base_class_array;
@@ -70,7 +74,7 @@ app_led_array_type& app_led_base_class_array()
 The application task performs the toggle functionality
 at a frequency of approximately $\frac{1}{2}~\text{Hz}$ using
 dynamic polymorphism on the elements stored
-in the base class pointer container.
+in the base class pointer container, as shown below.
 
 ```cpp
 void app::led::task_func()
@@ -96,13 +100,13 @@ void app::led::task_func()
 The five discrete LEDs in this example are fitted and setup
 as shown in the following table.
 
-| LED        | Port                        | Details                                                    |
-| ---------- | --------------------------- | ---------------------------------------------------------- |
-| LED0       | microcontroller `portb.5`   | port toggle high / low, $750~\Omega$                       |
-| LED1       | microcontroller `portb.1`   | Timer A, PWM duty cycle $0~{\ldots}~100{\\%}$              |
-| LED2       | port expander pin `GPA0`    | port toggle high / low, SPI software drive, $750~\Omega$   |
-| LED3       | port expander pin `GPA1`    | port toggle high / low, SPI software drive, $750~\Omega$   |
-| LED4       | port expander pin `GPA2`    | port toggle high / low, SPI software drive, $750~\Omega$   |
+| LED        | Port                        | Details                                                  |
+| ---------- | --------------------------- | -------------------------------------------------------- |
+| LED0       | microcontroller `portb.5`   | port toggle high/low, $750~\Omega$                       |
+| LED1       | microcontroller `portb.1`   | `timer a`, PWM duty cycle $0~{\ldots}~100{\\%}$          |
+| LED2       | port expander pin `GPA0`    | port toggle high/low, SPI software drive, $750~\Omega$   |
+| LED3       | port expander pin `GPA1`    | port toggle high/low, SPI software drive, $750~\Omega$   |
+| LED4       | port expander pin `GPA2`    | port toggle high/low, SPI software drive, $750~\Omega$   |
 
 In this example, we use ports from both the microcontroller as well
 as an external port expander chip. Hardware adressing is used
