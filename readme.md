@@ -105,6 +105,7 @@ The reference application supports the following targets:
 | `stm32h7a3`                            | STMicroelectronics(R) STM32H7A3 ARM(R) Cortex(R)-M7         |
 | `v850es_fx2`                           | Renesas(R) Electronics V850es/Fx2 upd703231                 |
 | `wch_ch32v307`                         | WCH CH32v307 RISC-V board                                   |
+| `wch_ch32v307_llvm`                    | WCH CH32v307 RISC-V board (but using an LLVM toolchain)     |
 | `x86_64-w64-mingw32`                   | PC on `Win*`/`mingw64` via GNU/GCC x86_x64 compiler         |
 | `xtensa32`                             | Espressif (XTENSA) NodeMCU ESP32                            |
 
@@ -211,7 +212,7 @@ make -f target/app/make/app_make.gmk rebuild TGT=stm32f446
 If the toolchain is needed then it must be installed or retrieved
 prior to building the target of the reference application.
 
-You can `wget` (or with a slightly different procedure optionally install)
+You can obtain via `wget` (or optionally install)
 the `gcc-arm-none-eabi` toolchain if needed.
 In this case, I have found it convenient to use
 a modern `gcc-arm-none-eabi` for MacOS which can be found at
@@ -239,8 +240,8 @@ PATH=$(pwd)/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi/bin:$PATH
 ```
 
 Step 3: Optionally `echo` the `PATH` for a quick path-check.
-It can also be helpful to query `arm-non-eabi-g++`'s version
-in order to verify that the toolchain is correctly added
+It can also be helpful to query `arm-non-eabi-g++`'s version.
+This is expected to verify that the toolchain is correctly added
 to this shell's local `PATH`.
 
 ```sh
@@ -248,8 +249,15 @@ echo $PATH
 arm-none-eabi-g++ -v
 ```
 
-Now repeat (or retry) the commands to build the target,
-as shown above with a direct call to `make`.
+Now simply use the commands to build the target
+with a direct call to `make` (which is the same
+as shown above for the `*nix` case).
+
+```sh
+cd real-time-cpp
+cd ref_app
+make -f target/app/make/app_make.gmk rebuild TGT=stm32f446
+```
 
 ### Build with VisualStudio(R) Project and CMD Batch
 
@@ -446,6 +454,9 @@ It uses the RISC-V CH32v307 microcontroller from
 Nanjing Qinheng Microelectronics Co., Ltd.
 The blue LED1 manually connected to port `GPIOC.0`
 via wire-connection provides the blinky toggle.
+The similar adaption `wch_ch32v307_llvm` is essentially
+the same except it uses an LLVM RISC-V toolchain
+instead of GCC RISC-V.
 
 Target `nxp_imxrt1062` runs on the Teensy 4.0 board from Spark Fun.
 The orange user-LED is toggled.
