@@ -446,9 +446,13 @@ The program toggles the GPIO status LED  at GPIO index `0x47`.
 The `rpi_pico_rp2040` target configuration employs the
 RaspberryPi(R) Pico RP2040 with dual-core ARM(R) Cortex(R)-M0+
 clocked at $133~\text{MHz}$. The low-level startup boots through
-core 0. Core 0 then starts up core 1 which carries out the blinky
-application while core 0 then enters an endless, idle loop.
+core 0. Core 0 then starts up core 1 (via a specifiec protocol).
+Core 1 subsequently carries out the blinky application,
+while core 0 enters an endless, idle loop.
 Ozone debug files are supplied for this system for those interested.
+Reverse engineering of the complicated (and scantly documented)
+dual-core startup originated in and have been taken from (with many thanks)
+[Chalandi/Blinky_Pico_dual_core_nosdk](https://github.com/Chalandi/Blinky_Pico_dual_core_nosdk).
 
 Target `v850es_fx2` uses a classic Renesas(R) V850es/Fx2 core.
 The upd703231 microcontroller derivative on an F-Line _Drive_ _It_
@@ -635,4 +639,3 @@ therefore, be beneficial for success with *all* of the code snippets.
 ### Licensing
 
   - The source code written for this repo is licensed under [Boost Software License 1.0](./LICENSE_1_0.txt).
-  - A modified subset of CMSIS is temporarily included for the target `rpi_pico_rp2040`. It is licensed under the Apache Software License version 2.0. The scope of modifications by Christopher Kormanyos 2024-July-23 includes removal of significant content not needed in this project.
