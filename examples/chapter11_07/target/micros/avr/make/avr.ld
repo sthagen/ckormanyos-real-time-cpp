@@ -1,6 +1,5 @@
-
 /*
- Copyright Christopher Kormanyos 2007 - 2021.
+ Copyright Christopher Kormanyos 2007 - 2024.
  Distributed under the Boost Software License,
  Version 1.0. (See accompanying file LICENSE_1_0.txt
  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,8 +17,8 @@ _rom_begin = 0x00000000;
 _rom_end   = 0x00007FFC;
 
 /* The beginning and end (i.e., top) of the stack */
-/* Set up a stack with a size of (1/4)K */
-_stack_begin = 0x00800800;
+/* Set up a the stack */
+_stack_begin = 0x00800880;
 _stack_end   = 0x00800900 - 2;
 
 /* The initial stack pointer (top of stack) is at the top of the 2K RAM */
@@ -27,8 +26,8 @@ __initial_stack_pointer = 0x00800900 - 2;
 
 MEMORY
 {
-  ROM(rx)   : ORIGIN = 0, LENGTH = 32K - 4
-  RAM(rw!x) : ORIGIN = 0x00800100, LENGTH = 0x00000800 - 0x00000100
+  ROM(rx)   : ORIGIN = 0, LENGTH = 32K
+  RAM(rw!x) : ORIGIN = 0x00800100, LENGTH = 0x00000800 - 0x00000080
 }
 
 SECTIONS
