@@ -5,8 +5,8 @@
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef MCAL_PORT_2025_02_22_H
-  #define MCAL_PORT_2025_02_22_H
+#ifndef MCAL_PORT_2025_03_15_H
+  #define MCAL_PORT_2025_03_15_H
 
   #include <mcal_reg.h>
 
@@ -14,50 +14,54 @@
   {
     namespace port
     {
-      typedef void config_type;
+      using config_type = void;
 
-      void init(const config_type*);
+      auto init(const config_type*) -> void;
 
       template<const std::uint32_t bpos>
       class port_pin
       {
       private:
-        static constexpr std::uint32_t bit_pos { bpos };
+        static constexpr std::uint32_t gpio_base         { mcal::reg::gpio::rtc_gpio_base };
+        static constexpr std::uint32_t gpio_pinxx_reg    { gpio_base + std::uint32_t { (UINT32_C(10) + bpos) * UINT32_C(4) } };
+        static constexpr std::uint32_t io_rtc_padxx_reg  { gpio_base + std::uint32_t { UINT32_C(0x5C) + (UINT32_C(10) + bpos) * UINT32_C(4) } };
 
       public:
-        static void set_direction_output()
+        static auto set_direction_output() -> void
         {
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::out,          bit_pos>::bit_clr();
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::out1,         bit_pos>::bit_clr();
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::enable_w1ts,  bit_pos>::bit_set();
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::enable1_w1ts, bit_pos>::bit_set();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, io_rtc_padxx_reg, UINT32_C(19)>::bit_set();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, gpio_pinxx_reg, UINT32_C(0)>::reg_set();
+
+          // Set the pin to output low.
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::rtc_gpio_out_reg,    std::uint32_t { UINT32_C(10) + bpos }>::bit_clr();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::rtc_gpio_enable_reg, std::uint32_t { UINT32_C(10) + bpos }>::bit_set();
         }
 
-        static void set_direction_input()
+        static auto set_direction_input() -> void
         {
         }
 
-        static void set_pin_high()
+        static auto set_pin_high() -> void
         {
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::out, bit_pos>::bit_set();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::rtc_gpio_out_reg, std::uint32_t { UINT32_C(10) + bpos }>::bit_set();
         }
 
-        static void set_pin_low()
+        static auto set_pin_low() -> void
         {
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::out, bit_pos>::bit_clr();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::rtc_gpio_out_reg, std::uint32_t { UINT32_C(10) + bpos }>::bit_clr();
         }
 
-        static bool read_input_value()
+        static auto read_input_value() -> bool
         {
           return false;
         }
 
-        static void toggle_pin()
+        static auto toggle_pin() -> void
         {
-          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::out, bit_pos>::bit_not();
+          mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::gpio::rtc_gpio_out_reg, std::uint32_t { UINT32_C(10) + bpos }>::bit_not();
         }
       };
     }
   }
 
-#endif // MCAL_PORT_2025_02_22_H
+#endif // MCAL_PORT_2025_03_15_H

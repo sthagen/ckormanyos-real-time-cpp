@@ -402,14 +402,16 @@ The Espressif (`target xtensa_esp32_s3`) port for NodeMCU ESP32-S3
 features a bare-metal startup _without_ using any of the SDK.
 The bare-metal startup was taken from the work of
 [Chalandi/Baremetal_esp32s3_nosdk](https://github.com/Chalandi/Baremetal_esp32s3_nosdk).
-The dual-core system first boots core0 which subsequently
-starts up core1 and also starts up the RISC-V coprocessor core.
+The multicore system first boots core0 which subsequently
+starts up core1 and also starts up the RISCV coprocessor core.
 Blinky runs in the standard `ref_app`
 on core0 toggling `port7` while an endless timer loop on core1
-toggles `port6`. The LED ports togle in near unison at $\frac{1}{2}~\text{Hz}$.
-Self-procured LEDs and resistors need to be fitted in order to observe
-blinky on this particular board. The RISC-V coprocessor
-toggles `port17` at a randomly selected frequency of $\sim\frac{2}{3}~\text{Hz}$.
+toggles `port6`. These LED ports togle in near unison
+at the normal blinky feequency of $\frac{1}{2}~\text{Hz}$.
+The RISCV coprocessor toggles `port17` at a randomly chosen
+frequency slightly higher than that of the regular blinky show.
+Self-procured LEDs and resistors need to be fitted externally
+on the port pins in order to observe blinking on this particular board.
 
 The NXP(R) OM13093 LPC11C24 board ARM(R) Cortex(R)-M0+ configuration
 called `target lpc11c24` toggles the LED on `port0.8`.
