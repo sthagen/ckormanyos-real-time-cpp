@@ -16,19 +16,49 @@
 
   namespace util
   {
-    template<typename unsigned_tick_type>
+    template<typename UnsignedTickType>
+    struct default_timer_backend;
+
+    template<typename UnsignedTickType,
+             typename BackendType = default_timer_backend<UnsignedTickType>>
+    class timer;
+
+    template<typename UnsignedTickType>
+    struct default_timer_backend
+    {
+      using tick_type = UnsignedTickType;
+
+      constexpr static auto get_now() -> tick_type
+      {
+        return static_cast<tick_type>(mcal::gpt::secure::get_time_elapsed());
+      }
+    };
+
+    template<typename UnsignedTickType,
+             typename BackendType>
     class timer
     {
     private:
+      using backend_type = BackendType;
+
+    public:
+      using tick_type = typename backend_type::tick_type;
+
+    private:
       static constexpr auto timer_mask =
-        static_cast<unsigned_tick_type>
+        static_cast<tick_type>
         (
-          (UINTMAX_C(1) << static_cast<unsigned>(std::numeric_limits<unsigned_tick_type>::digits - 1)) - UINTMAX_C(1)
+          static_cast<std::uintmax_t>
+          (
+              static_cast<std::uintmax_t>
+              (
+                UINTMAX_C(1) << static_cast<unsigned>(std::numeric_limits<tick_type>::digits - 1)
+              )
+            - UINTMAX_C(1)
+          )
         );
 
     public:
-      using tick_type = unsigned_tick_type;
-
       template<typename other_tick_type> static constexpr auto microseconds(other_tick_type value_microseconds) noexcept -> tick_type { return static_cast<tick_type>(value_microseconds); }
       template<typename other_tick_type> static constexpr auto milliseconds(other_tick_type value_milliseconds) noexcept -> tick_type { return static_cast<tick_type>(UINT16_C(1000)) * microseconds(value_milliseconds); }
       template<typename other_tick_type> static constexpr auto seconds     (other_tick_type value_seconds)      noexcept -> tick_type { return static_cast<tick_type>(UINT16_C(1000)) * milliseconds(value_seconds     ); }
@@ -47,16 +77,16 @@
 
       ~timer() = default;
 
-      auto operator=(const timer& other) -> timer& = default;
+      constexpr auto operator=(const timer& other) -> timer& = default;
 
-      auto operator=(timer&& other) noexcept -> timer& = default;
+      constexpr auto operator=(timer&& other) noexcept -> timer& = default;
 
-      auto start_interval(const tick_type& tick_value) -> void
+      constexpr auto start_interval(const tick_type& tick_value) -> void
       {
         my_tick += tick_value;
       }
 
-      auto start_relative(const tick_type& tick_value) -> void
+      constexpr auto start_relative(const tick_type& tick_value) -> void
       {
         my_tick = my_now() + tick_value;
       }
@@ -71,7 +101,7 @@
         return (static_cast<tick_type>(timepoint - my_tick) <= timer_mask);
       }
 
-      auto set_mark() -> void
+      constexpr auto set_mark() -> void
       {
         return (my_tick = my_now());
       }
@@ -99,9 +129,9 @@
     private:
       tick_type my_tick { my_now() };
 
-      constexpr static auto my_now() -> tick_type
+      static constexpr auto my_now() -> tick_type
       {
-        return static_cast<tick_type>(mcal::gpt::secure::get_time_elapsed());
+        return static_cast<tick_type>(backend_type::get_now());
       }
 
       static_assert((!std::numeric_limits<tick_type>::is_signed),
