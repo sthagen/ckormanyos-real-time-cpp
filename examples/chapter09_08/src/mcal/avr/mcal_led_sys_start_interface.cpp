@@ -7,9 +7,9 @@
 
 #include <mcal_led_sys_start_interface.h>
 
-bool& mcal::led::sys_start_interface::my_exit_pc_api_flag()
+auto mcal::led::sys_start_interface::my_exit_pc_api_flag() -> bool&
 {
-  static bool my_flag;
+  static bool my_flag { };
 
   return my_flag;
 }
