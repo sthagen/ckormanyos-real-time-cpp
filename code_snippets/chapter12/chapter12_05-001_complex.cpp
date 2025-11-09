@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2017 - 2018.
+//  Copyright Christopher Kormanyos 2017 - 2025.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,20 +11,25 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <sstream>
 
-int main()
+auto main() -> int;
+
+auto main() -> int
 {
   std::complex<float> x(1.23F, 3.45F); // (1.23 + 3.45 I)
   std::complex<float> y(0.77F, 0.22F); // (0.77 + 0.22 I)
 
-  float nx = std::norm(x); // 13.4154
-  float ay = std::abs(y);  // 0.800812
+  std::complex<float> z1;
+  std::complex<float> z2;
 
-  std::cout << std::setprecision(std::numeric_limits<float>::digits10)
-            << nx
-            << std::endl;
+  z1 = x / y;       // (2.6603774 + 3.7204117 I)
+  z2 = std::sin(x); // (14.859343 + 5.2590045 I)
 
-  std::cout << std::setprecision(std::numeric_limits<float>::digits10)
-            << ay
-            << std::endl;
+  std::stringstream strm { };
+
+  strm << "z1: " << std::setprecision(std::numeric_limits<float>::digits10) << z1 << '\n';
+  strm << "z2: " << std::setprecision(std::numeric_limits<float>::digits10) << z2 << '\n';
+
+  std::cout << strm.str() << std::endl;
 }
