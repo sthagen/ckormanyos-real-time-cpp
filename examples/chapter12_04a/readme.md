@@ -1,4 +1,4 @@
-# Example Chapter12_04a (variation 32-bit controller)
+# Example Chapter12_04a (variation 32-bit microcontroller)
 ## Benchmarking Floating-Point Calculations
 
 Example chapter12_04a performs a variety of floating-point
@@ -9,14 +9,16 @@ mathematics.
 
 The same special functions and arguments are used as in
 Example Chapter12_04. In variation 12_04a, however,
-the open-source 32-bit BL602 single-core RISC-V (SiFive E24)
-microcontroller is used.
+a 32-bit, single-core ARM(R) Cortex(R)-M3 microcontroller
+is used.
 
 ## Hardware Setup
 
-In this particular example, we have simply used a commercially-available
-BL602 single-core RISC-V (SiFive E24) board placed on a breadboard
-with soldered-on pins.
+In this particular example, we have simply used
+the commercially-available, open-platform
+[STM32F100 Value Line Discovery Kit](https://www.st.com/en/evaluation-tools/stm32vldiscovery.html)
+directly out-of-the-box.
 
-The wiring is straightforward. The blinking LED uses an external green LED
-controlled by pin `IO3`. THe benchmark toggle pin is `IO4`.
+The wiring is straightforward. The blinking LED uses the blue colored
+user LED controlled by pin `portc.8`. The benchmark toggle pin is `portb.9`.
+The microcontroller is clocked at $24~\text{MHz}$.

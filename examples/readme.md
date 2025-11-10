@@ -80,6 +80,13 @@ The main difference, however, is that a _digitally_-controlled industry-standard
 RGB LED of type WS2812 is used. In addition, the color transitions at and around $255~\text{bits}$-RGB
 are slowed down providing emphasized, longer-lasting RGB hues near these points.
 
+Example ![chapter09_08b](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter09_08b) Controlling an RGB LED of Type WS2812  (variation 32-bit microcontroller).\
+Example chapter09_08b utilizes essentially the same techniques to control its ws2812 RGB LED
+as were used in Example Chapter09_08a. In variation 09_08b, however,
+the open-platform [STM32F100 Value Line Discovery Kit](https://www.st.com/en/evaluation-tools/stm32vldiscovery.html)
+is used.
+
+
 Example ![chapter10_08](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter10_08) External SPI RAM and Computing $10,001$ Digits of Pi.\
 This advanced example extends available RAM via SPI SRAM chips and uses a Pi Spigot algorithm
 to compute $10,001$ digits of the mathematical constant $\pi$
@@ -96,7 +103,7 @@ of the mathematical constant $\pi$ up to $100,001$ decimal digits.
 Example ![chapter10_09](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter10_09) $100,001$ Digits of Pi on Raspberry Pi(R).\
 This advanced example ports the Pi Spigot calculation
 of $100,001$ decimal digits of $\pi$
-to the powerful Arm(R)-based Raspberry Pi(R) single-board computer.
+to the powerful ARM(R)-based Raspberry Pi(R) single-board computer.
 
 Example ![chapter11_07](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter11_07) Preemptive Multitasking.\
 This example makes straightforward use of preemptive multitasking scheduling with a blinky-style application that features a main task and a low-priority background task.
@@ -104,9 +111,10 @@ This example makes straightforward use of preemptive multitasking scheduling wit
 Example ![chapter12_04](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter12_04) Benchmarking Floating-Point Calculations.\
 This example performs a variety of floating-point calculations of selected special functions of pure and applied mathematics.
 
-Example ![chapter12_04a](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter12_04a) Benchmarking Floating-Point Calculations (32-bit variation).\
+Example ![chapter12_04a](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter12_04a) Benchmarking Floating-Point Calculations (variation 32-bit microcontroller).\
 The same special functions and arguments are used as in Example Chapter12_04. In variation 12_04a, however,
-the open-source 32-bit BL602 single-core RISC-V (SiFive E24) microcontroller is used.
+the open-platform [STM32F100 Value Line Discovery Kit](https://www.st.com/en/evaluation-tools/stm32vldiscovery.html)
+is used directly out-of-the-box.
 
 Example ![chapter16_08](https://github.com/ckormanyos/real-time-cpp/tree/master/examples/chapter16_08) Generating and displaying 128-bit Random Prime Numbers.\
 This advanced example uses an extended integer class to create 128-bit unsigned prime integers with primality testing performed via Miller-Rabin.
