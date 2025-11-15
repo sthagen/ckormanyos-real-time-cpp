@@ -13,6 +13,14 @@ the commercially-available, open-platform
 [STM32F100 Value Line Discovery Kit](https://www.st.com/en/evaluation-tools/stm32vldiscovery.html)
 with soldered-on pins fitted on a breadboard.
 
-The wiring is straightforward. The blinking LED uses the blue colored
-user LED controlled by pin `portc.8`. The LED digital control signal
-is on `portb.9`. The microcontroller is clocked at $24~\text{MHz}$.
+The wiring is straightforward. The standard monotone blinking LED
+uses the blue user-LED factory-fitted on pin `portc.8`.
+The RGB LED digital control signal is on `portb.9`.
+A logic-AND gate shifts the microcontroller pin's voltage level.
+The microcontroller is clocked at $24~\text{MHz}$.
+
+The hardware setup with the RGB LED in action is pictured
+in the image below. The pictures depicts a pink hue eminating
+from the bright RGB LED of type ws2812B.
+
+![](./images/board09_08b.jpg)
