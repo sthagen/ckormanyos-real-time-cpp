@@ -9,8 +9,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // This program can be used to compute many thousands
-// of decimal digits of digits of pi. It uses a so-called
-// "spigot" algorithm having quadratic complexity.
+// of decimal digits of pi. It uses a so-called "spigot"
+// algorithm. This calculation has quadratic complexity.
 
 #include <pi_calc_cfg.h>
 
@@ -18,7 +18,9 @@
 #include <math/pi_spigot/pi_spigot.h>
 #include <mcal_benchmark.h>
 #include <mcal_memory/mcal_memory_sram_array.h>
-#include <util/utility/util_baselexical_cast.h>
+
+#include <algorithm>
+#include <cstdint>
 
 namespace local
 {
@@ -49,8 +51,6 @@ namespace local
     return instance;
   }
 
-  auto pi_output_digits10 = std::uint32_t { UINT8_C(0) };
-
   using benchmark_port_type = ::mcal::benchmark::benchmark_port_type;
 
   constexpr auto pi_spigot_input_start_address = mcal_sram_uintptr_t { UINT8_C(0) };
@@ -69,7 +69,7 @@ namespace local
   }
 
   using hash_type = math::checksums::hash::hash_sha1;
-  using hash_result_type = typename hash_type::result_type;
+  using hash_result_type = hash_type::result_type;
 
   auto pi_spigot_hash() -> hash_type&;
 

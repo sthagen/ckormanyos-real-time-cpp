@@ -24,7 +24,7 @@ jobs:
         compiler: [ g++, clang++ ]
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: clone-submods-bootstrap-headers-boost-develop
@@ -38,9 +38,9 @@ jobs:
           ./bootstrap.sh
           ./b2 headers
         working-directory: ./
-      - name: clone-cppalliance-decimal
+      - name: clone-boost-decimal
         run: |
-          git clone -b develop --depth 1 https://github.com/cppalliance/decimal.git ../cppalliance-decimal-root
+          git clone -b develop --depth 1 https://github.com/boostorg/decimal.git ../boost-decimal-root
       - name: clone-cppalliance-crypt
         run: |
           git clone -b develop --depth 1 https://github.com/cppalliance/crypt.git ../cppalliance-crypt-root
@@ -56,7 +56,7 @@ jobs:
         compiler: [ g++, clang++ ]
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: clone-submods-bootstrap-headers-boost-develop
@@ -70,9 +70,9 @@ jobs:
           ./bootstrap.sh
           ./b2 headers
         working-directory: ./
-      - name: clone-cppalliance-decimal
+      - name: clone-boost-decimal
         run: |
-          git clone -b develop --depth 1 https://github.com/cppalliance/decimal.git ../cppalliance-decimal-root
+          git clone -b develop --depth 1 https://github.com/boostorg/decimal.git ../boost-decimal-root
         working-directory: ./
       - name: benchmark_apple-clang
         run: ./target/build/test_app_benchmarks.sh ${{ matrix.compiler }} ${{ matrix.standard }}
@@ -87,7 +87,7 @@ jobs:
       matrix:
         standard: [ c++20, c++23 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -118,7 +118,7 @@ jobs:
       matrix:
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -141,7 +141,7 @@ jobs:
       matrix:
         standard: [ c++23 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -172,7 +172,7 @@ jobs:
       matrix:
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -188,9 +188,9 @@ jobs:
           ./bootstrap.sh
           ./b2 headers
         working-directory: ./
-      - name: clone-cppalliance-decimal
+      - name: clone-boost-decimal
         run: |
-          git clone -b develop --depth 1 https://github.com/cppalliance/decimal.git ../cppalliance-decimal-root
+          git clone -b develop --depth 1 https://github.com/boostorg/decimal.git ../boost-decimal-root
       - name: clone-cppalliance-crypt
         run: |
           git clone -b develop --depth 1 https://github.com/cppalliance/crypt.git ../cppalliance-crypt-root
@@ -208,7 +208,7 @@ jobs:
       matrix:
         standard: [ c++23 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -235,7 +235,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -258,7 +258,7 @@ jobs:
         compiler: [ g++, clang++ ]
         standard: [ c++20 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: benchmark_single-cnl
@@ -275,7 +275,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools
@@ -324,7 +324,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: update-tools

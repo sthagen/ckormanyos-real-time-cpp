@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2020 - 2025.
+//  Copyright Christopher Kormanyos 2020 - 2026.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,56 +16,61 @@
   namespace mcal { namespace memory { namespace sram {
 
   template<typename ValueType>
-  ValueType read(const mcal_sram_uintptr_t src_addr,
-                 const typename std::enable_if<(sizeof(ValueType) == 1U)>::type* = nullptr) noexcept
+  auto read(const mcal_sram_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 1U), ValueType>
   {
-    auto byte_to_read = std::uint8_t { };
+    static_assert(std::is_trivially_copyable<ValueType>::value, "SRAM values must be trivially copyable.");
 
-    const auto result_read_is_ok = mcal_memory_sram_device().read(src_addr, &byte_to_read);
+    std::uint8_t byte_to_read;
 
-    static_cast<void>(result_read_is_ok);
+    // The backend status is intentionally ignored. SRAM proxy operations are
+    // value-oriented and do not expose a transaction status.
+    static_cast<void>(mcal_memory_sram_device().read(src_addr, &byte_to_read));
 
     return byte_to_read;
   }
 
   template<typename ValueType>
-  ValueType read(const mcal_sram_uintptr_t src_addr,
-                 const typename std::enable_if<(sizeof(ValueType) != 1U)>::type* = nullptr) noexcept
+  auto read(const mcal_sram_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) != 1U), ValueType>
   {
+    static_assert(std::is_trivially_copyable<ValueType>::value, "SRAM values must be trivially copyable.");
+
     using local_value_type = ValueType;
 
-    auto value_to_read = local_value_type { };
+    local_value_type value_to_read;
 
-    const auto result_read_is_ok =
-      mcal_memory_sram_device().read_n(src_addr, reinterpret_cast<std::uint8_t*>(&value_to_read), sizeof(local_value_type));
-
-    static_cast<void>(result_read_is_ok);
+    // The backend status is intentionally ignored. SRAM proxy operations do
+    // not expose a transaction status.
+    static_cast<void>(mcal_memory_sram_device().read_n(src_addr, reinterpret_cast<std::uint8_t*>(&value_to_read), sizeof(local_value_type)));
 
     return value_to_read;
   }
 
   template<typename ValueType>
-  void write(const ValueType src_value,
-             const mcal_sram_uintptr_t dest_addr,
-             const typename std::enable_if<(sizeof(ValueType) == 1U)>::type* = nullptr) noexcept
+  auto write(const ValueType src_value, const mcal_sram_uintptr_t dest_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 1U), void>
   {
-    const auto result_write_is_ok = mcal_memory_sram_device().write(dest_addr, &src_value);
+    static_assert(std::is_trivially_copyable<ValueType>::value, "SRAM values must be trivially copyable.");
 
-    static_cast<void>(result_write_is_ok);
+    // The backend status is intentionally ignored. SRAM proxy operations do
+    // not expose a transaction status.
+    static_cast<void>(mcal_memory_sram_device().write(dest_addr, &src_value));
   }
 
   template<typename ValueType>
-  void write(const ValueType src_value,
-             const mcal_sram_uintptr_t dest_addr,
-             const typename std::enable_if<(sizeof(ValueType) != 1U)>::type* = nullptr) noexcept
+  auto write(const ValueType src_value, const mcal_sram_uintptr_t dest_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) != 1U), void>
   {
+    static_assert(std::is_trivially_copyable<ValueType>::value, "SRAM values must be trivially copyable.");
+
+    // The backend status is intentionally ignored. SRAM proxy operations do
+    // not expose a transaction status.
     using local_value_type = ValueType;
 
-    const auto result_write_is_ok = mcal_memory_sram_device().write_n(dest_addr, reinterpret_cast<const std::uint8_t*>(&src_value), sizeof(local_value_type));
-
-    static_cast<void>(result_write_is_ok);
+    static_cast<void>(mcal_memory_sram_device().write_n(dest_addr, reinterpret_cast<const std::uint8_t*>(&src_value), sizeof(local_value_type)));
   }
 
-  } } } // namespace mcal::memory::progmem
+  } } } // namespace mcal::memory::sram
 
 #endif // MCAL_MEMORY_SRAM_ACCESS_2020_04_10_H

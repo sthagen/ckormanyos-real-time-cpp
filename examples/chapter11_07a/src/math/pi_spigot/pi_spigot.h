@@ -1,7 +1,7 @@
 ﻿///////////////////////////////////////////////////////////////////
 //                                                               //
 //  Copyright Iliass Mahjoub 2022.                               //
-//  Copyright Christopher Kormanyos 2019 - 2025.                 //
+//  Copyright Christopher Kormanyos 2019 - 2026.                 //
 //  Distributed under the Boost Software License,                //
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt          //
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)             //
@@ -106,20 +106,6 @@
         p_hash->initialize();
       }
 
-      using local_input_iterator_type = InputIteratorType;
-      using local_input_value_type = typename std::iterator_traits<local_input_iterator_type>::value_type;
-
-      // Invalidate the input container values at the first 32 indices.
-      const std::uint32_t
-        invalidate_size
-        {
-          (std::min)(std::uint32_t { UINT8_C(32) }, get_input_static_size())
-        };
-
-      std::fill(my_pi_in,
-                detail::advance_and_point(my_pi_in, invalidate_size),
-                (std::numeric_limits<local_input_value_type>::max)());
-
       unsigned_small_type val_c { static_cast<unsigned_small_type>(static_cast<unsigned>(UINT8_C(0))) };
 
       my_output_count = static_cast<std::uint32_t>(UINT8_C(0));
@@ -130,8 +116,6 @@
         pfn_callback_to_report_digits10(my_output_count);
       }
 
-      constexpr unsigned_large_type p10_loop { static_cast<unsigned_large_type>(pow10(loop_digit())) };
-
       // Operation count Mathematica(R), example for loop_digit=9.
       // Sum[Floor[((d - j) (Floor[((10 9)/3)] + 1))/9], {j, 0, Floor[d/9] 9, 9}]
 
@@ -139,25 +123,29 @@
                         j < result_digit();
                         j = static_cast<std::uint32_t>(static_cast<std::uint32_t>(j + loop_digit())))
       {
+        const auto ilim { input_scale(result_digit() - j) };
+        const bool is_first_group { (j == static_cast<std::uint32_t>(UINT8_C(0))) };
+
         unsigned_large_type val_d { static_cast<unsigned_large_type>(UINT8_C(0)) };
 
-        const auto ilim { input_scale(result_digit() - j) };
+        InputIteratorType my_pi_in_current { detail::advance_and_point(my_pi_in, ilim - static_cast<std::uint32_t>(UINT8_C(1))) };
 
-        for(auto   i = static_cast<std::uint32_t>(UINT8_C(0));
-                   i < ilim;
-                 ++i)
+        constexpr unsigned_small_type p10_loop { static_cast<unsigned_small_type>(pow10(loop_digit())) };
+
+        for(auto my_index = static_cast<std::int32_t>(ilim - static_cast<std::uint32_t>(UINT8_C(1)));
+                 my_index >= static_cast<std::int32_t>(INT8_C(0));
+               --my_index)
         {
-          const auto my_index =
-            static_cast<std::uint32_t>
-            (
-                static_cast<std::uint32_t>(ilim - static_cast<std::uint32_t>(UINT8_C(1)))
-              - i
-            );
+          using input_value_type = typename InputIteratorType::value_type;
 
-          const auto di =
-            ((j == static_cast<std::uint32_t>(UINT8_C(0)))
-              ? static_cast<unsigned_large_type>(d_init())
-              : static_cast<unsigned_large_type>(*detail::advance_and_point(my_pi_in, my_index)));
+          const unsigned_large_type
+            di
+            {
+              (
+                is_first_group ? static_cast<unsigned_large_type>(d_init())
+                               : static_cast<unsigned_large_type>(static_cast<input_value_type>(*my_pi_in_current))
+              )
+            };
 
           val_d =
             static_cast<unsigned_large_type>
@@ -169,24 +157,24 @@
           const auto val_b =
             static_cast<std::uint32_t>
             (
-                static_cast<std::uint32_t>
-                (
-                  my_index * static_cast<std::uint32_t>(UINT8_C(2))
-                )
-              + static_cast<std::uint32_t>(UINT8_C(1))
+              static_cast<std::uint32_t>(my_index) * UINT8_C(2) + UINT8_C(1)
             );
 
-          *detail::advance_and_point(my_pi_in, my_index) = static_cast<std::uint32_t>(val_d % val_b);
+          const auto quotient { static_cast<unsigned_large_type>(val_d / val_b) };
 
-          val_d /= val_b;
+          *my_pi_in_current = static_cast<input_value_type>(val_d - (quotient * val_b));
 
-          if(my_index > static_cast<std::uint32_t>(UINT8_C(1)))
+          val_d = quotient;
+
+          if(my_index > INT8_C(1))
           {
-            val_d *= my_index;
+            val_d *= static_cast<std::uint32_t>(my_index);
           }
 
-          ++my_operation_count;
+          --my_pi_in_current;
         }
+
+        my_operation_count += static_cast<std::uintmax_t>(ilim);
 
         // Parse the next digits of pi, where the group has loop_digit digits.
         // If loop_digit is 4, for instance, then successive groups
@@ -197,15 +185,24 @@
         // A group of four sequential zeros, for instance, at a point slightly
         // above 50,000 digits stops iteration for a loop_digit count of 4.
         // For this reason, we usually use a loop_digit count of 9, which
-        // has been tested on the PC up to 1,000,001 (a million) decimal digits.
+        // has been tested on the PC up to 1,000,001 (a million and one)
+        // decimal digits.
+
+        const unsigned_small_type val_d_div_p10_loop
+        {
+          static_cast<unsigned_small_type>(val_d / p10_loop)
+        };
 
         const auto next_digits =
           static_cast<unsigned_small_type>
           (
-            val_c + static_cast<unsigned_small_type>(val_d / p10_loop)
+            val_c + val_d_div_p10_loop
           );
 
-        val_c = static_cast<unsigned_small_type>(val_d % p10_loop);
+        val_c = static_cast<unsigned_small_type>
+        (
+          val_d - static_cast<unsigned_large_type>(val_d_div_p10_loop * p10_loop)
+        );
 
         const std::uint_fast8_t
           n_loop
@@ -222,7 +219,9 @@
 
         unsigned_small_type scale10 { pow10(loop_digit() - static_cast<std::uint32_t>(UINT8_C(1))) };
 
-        using output_chars_array_type = std::array<std::uint8_t, static_cast<std::size_t>(loop_digit())>;
+        using output_value_type = std::uint8_t;
+
+        using output_chars_array_type = std::array<output_value_type, static_cast<std::size_t>(loop_digit())>;
 
         output_chars_array_type output_chars_as_bytes_hash_array { };
 
@@ -241,9 +240,9 @@
           if(p_hash != nullptr)
           {
             output_chars_as_bytes_hash_array[static_cast<std::size_t>(loop_index)] =
-              static_cast<std::uint8_t>
+              static_cast<output_value_type>
               (
-                output_value + static_cast<std::uint8_t>(UINT8_C(0x30))
+                output_value + static_cast<output_value_type>(UINT8_C(0x30))
               );
           }
 
@@ -314,11 +313,7 @@
 
     static constexpr auto d_init() -> unsigned_small_type
     {
-      return
-        static_cast<unsigned_small_type>
-        (
-          pow10(loop_digit()) / static_cast<unsigned>(UINT8_C(5))
-        );
+      return static_cast<unsigned_small_type>(pow10(loop_digit()) / UINT8_C(5));
     }
 
     static_assert(loop_digit() <= static_cast<std::uint32_t>(std::numeric_limits<unsigned_small_type>::digits10),
