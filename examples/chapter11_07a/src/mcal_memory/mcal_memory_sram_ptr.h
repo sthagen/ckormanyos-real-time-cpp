@@ -57,6 +57,11 @@
       return reference(my_address);
     }
 
+    auto operator->() noexcept -> reference
+    {
+      return reference(my_address);
+    }
+
     auto operator*() const noexcept -> reference
     {
       return reference(my_address);

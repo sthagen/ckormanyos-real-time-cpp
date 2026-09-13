@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2019 - 2020.
+//  Copyright Christopher Kormanyos 2019 - 2026.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef PI_SPIGOT_BASE_2019_11_24_H_
-  #define PI_SPIGOT_BASE_2019_11_24_H_
+#ifndef PI_SPIGOT_BASE_2019_11_24_H
+  #define PI_SPIGOT_BASE_2019_11_24_H
 
   #include <algorithm>
   #include <cstdint>
@@ -137,21 +137,24 @@
       // If loop_digit is 4, for instance, then successive groups
       // of digits have a form such as: 3141, 5926, ..., etc.
 
-      const std::uint32_t next_digits =
-        my_c + std::uint32_t(my_d / detail::pow10<loop_digit>::value);
+      constexpr std::uint32_t group_base = detail::pow10<loop_digit>::value;
 
-      my_c = std::uint32_t(my_d % detail::pow10<loop_digit>::value);
+      const std::uint64_t quotient = my_d / group_base;
+      std::uint32_t next_digits = my_c + std::uint32_t(quotient);
 
-      const std::uint32_t n =
-        (std::min)(loop_digit,
-                    std::uint32_t(result_digit - my_j));
+      my_c = std::uint32_t(my_d - (quotient * group_base));
+
+      const std::uint32_t n { (std::min)(loop_digit, std::uint32_t(result_digit - my_j)) };
 
       std::uint32_t scale10 = detail::pow10<loop_digit - UINT32_C(1)>::value;
 
       for(std::size_t i = std::size_t(0U); i < std::size_t(n); ++i)
       {
-        output_first[my_j + i] =
-          output_value_type(std::uint32_t(next_digits / scale10) % UINT32_C(10));
+        const std::uint32_t next_digit = next_digits / scale10;
+
+        output_first[my_j + i] = output_value_type(next_digit);
+
+        next_digits -= next_digit * scale10;
 
         scale10 /= UINT32_C(10);
       }
@@ -165,4 +168,4 @@
 
   } } // namespace math::constants
 
-#endif // PI_SPIGOT_BASE_2019_11_24_H_
+#endif // PI_SPIGOT_BASE_2019_11_24_H

@@ -17,12 +17,11 @@
   namespace mcal { namespace memory { namespace progmem {
 
   template<typename ValueType>
-  auto read(
-    const mcal_progmem_uintptr_t src_addr,
-    const typename std::enable_if<(   (sizeof(ValueType) != 1U)
-                                   && (sizeof(ValueType) != 2U)
-                                   && (sizeof(ValueType) != 4U)
-    && (sizeof(ValueType) != 8U))>::type* = nullptr) noexcept -> ValueType
+  auto read(const mcal_progmem_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(   (sizeof(ValueType) != 1U)
+                                  && (sizeof(ValueType) != 2U)
+                                  && (sizeof(ValueType) != 4U)
+                                  && (sizeof(ValueType) != 8U)), ValueType>
   {
     static_assert(std::is_trivially_copyable<ValueType>::value,
                   "Program-memory values must be trivially copyable.");
@@ -42,33 +41,29 @@
   }
 
   template<typename ValueType>
-  auto read(
-    const mcal_progmem_uintptr_t src_addr,
-    const typename std::enable_if<(sizeof(ValueType) == 1U)>::type* = nullptr) noexcept -> ValueType
+  auto read(const mcal_progmem_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 1U), ValueType>
   {
     return mcal_memory_progmem_read_byte(src_addr);
   }
 
   template<typename ValueType>
-  auto read(
-    const mcal_progmem_uintptr_t src_addr,
-    const typename std::enable_if<(sizeof(ValueType) == 2U)>::type* = nullptr) noexcept -> ValueType
+  auto read(const mcal_progmem_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 2U), ValueType>
   {
     return mcal_memory_progmem_read_word(src_addr);
   }
 
   template<typename ValueType>
-  auto read(
-    const mcal_progmem_uintptr_t src_addr,
-    const typename std::enable_if<(sizeof(ValueType) == 4U)>::type* = nullptr) noexcept -> ValueType
+  auto read(const mcal_progmem_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 4U), ValueType>
   {
     return mcal_memory_progmem_read_dword(src_addr);
   }
 
   template<typename ValueType>
-  auto read(
-    const mcal_progmem_uintptr_t src_addr,
-    const typename std::enable_if<(sizeof(ValueType) == 8U)>::type* = nullptr) noexcept -> ValueType
+  auto read(const mcal_progmem_uintptr_t src_addr) noexcept
+    -> typename std::enable_if_t<(sizeof(ValueType) == 8U), ValueType>
   {
     return mcal_memory_progmem_read_qword(src_addr);
   }
