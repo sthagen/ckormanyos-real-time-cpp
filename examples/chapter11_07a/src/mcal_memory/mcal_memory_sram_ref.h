@@ -30,7 +30,7 @@
     using size_type       = address_type;
     using difference_type = AddressDifferenceType;
 
-    explicit sram_ref(address_type address = 0U) noexcept : my_address(address) { }
+    explicit sram_ref(address_type address = address_type { }) noexcept : my_address(address) { }
 
     sram_ref(const sram_ref&) noexcept = default;
 
@@ -53,7 +53,7 @@
                                         OtherAddressType,
                                         OtherAddressDifferenceType>& other) noexcept -> sram_ref&
     {
-      return operator=(static_cast<value_type>(other));
+      return operator=(static_cast<value_type>(static_cast<OtherValueType>(other)));
     }
 
     explicit operator value_type() const noexcept
@@ -83,7 +83,7 @@
     using size_type       = address_type;
     using difference_type = AddressDifferenceType;
 
-    explicit constexpr sram_const_ref(address_type address = 0U) noexcept
+    explicit constexpr sram_const_ref(address_type address = address_type { }) noexcept
       : my_address(address) { }
 
     sram_const_ref(const sram_const_ref&) noexcept = default;

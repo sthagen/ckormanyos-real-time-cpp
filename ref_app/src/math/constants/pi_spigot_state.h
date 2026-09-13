@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2019 - 2020.
+//  Copyright Christopher Kormanyos 2019 - 2026.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,8 +7,8 @@
 
 // The pi spigot program, as state machine.
 
-#ifndef PI_SPIGOT_STATE_2019_05_12_H_
-  #define PI_SPIGOT_STATE_2019_05_12_H_
+#ifndef PI_SPIGOT_STATE_2019_05_12_H
+  #define PI_SPIGOT_STATE_2019_05_12_H
 
   #include <math/constants/pi_spigot_base.h>
 
@@ -37,7 +37,7 @@
     pi_spigot_state() : my_state(state_type::finished),
                         my_i    (0) { }
 
-    virtual ~pi_spigot_state() { }
+    ~pi_spigot_state() override { }
 
     void initialize()
     {
@@ -144,4 +144,4 @@
 
   } } // namespace math::constants
 
-#endif // PI_SPIGOT_STATE_2019_05_12_H_
+#endif // PI_SPIGOT_STATE_2019_05_12_H
