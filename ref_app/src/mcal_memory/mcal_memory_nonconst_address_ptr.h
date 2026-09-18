@@ -68,8 +68,8 @@
     auto operator++() noexcept -> nonconst_address_ptr& { my_ptr += static_size; return *this; }
     auto operator--() noexcept -> nonconst_address_ptr& { my_ptr -= static_size; return *this; }
 
-    nonconst_address_ptr operator++(int) noexcept { const nonconst_address_ptr tmp = *this; my_ptr += static_size; return tmp; }
-    nonconst_address_ptr operator--(int) noexcept { const nonconst_address_ptr tmp = *this; my_ptr -= static_size; return tmp; }
+    auto operator++(int) noexcept -> nonconst_address_ptr { const nonconst_address_ptr tmp = *this; my_ptr += static_size; return tmp; }
+    auto operator--(int) noexcept -> nonconst_address_ptr { const nonconst_address_ptr tmp = *this; my_ptr -= static_size; return tmp; }
 
     auto operator+(difference_type n) const noexcept -> nonconst_address_ptr
     {

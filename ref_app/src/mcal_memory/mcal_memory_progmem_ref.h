@@ -31,6 +31,10 @@
 
     progmem_ref(const progmem_ref&) noexcept = default;
 
+    progmem_ref& operator=(const progmem_ref&) = delete;
+    progmem_ref& operator=(progmem_ref&&) = delete;
+    progmem_ref& operator=(const value_type&) = delete;
+
     operator value_type() const noexcept
     {
       return value();
@@ -43,9 +47,6 @@
 
   private:
     const address_type my_address;
-
-    progmem_ref& operator=(const progmem_ref&) = delete;
-    progmem_ref& operator=(const value_type&) = delete;
   };
 
   } } } // namespace mcal::memory::progmem

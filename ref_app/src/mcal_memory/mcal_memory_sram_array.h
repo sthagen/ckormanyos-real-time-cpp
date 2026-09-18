@@ -30,20 +30,17 @@
 
   public:
     // Standard container-local type definitions.
+    using pointer                = sram_ptr<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>;
+    using const_reference        = sram_const_ref<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>;
     using iterator               = mcal::memory::sram::sram_iterator<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>;
-    using const_iterator         = mcal::memory::const_address_ptr<sram_ptr<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>,
-                                                                   sram_const_ref<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>>;
+    using const_iterator         = mcal::memory::const_address_ptr<pointer, const_reference>;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     using size_type              = mcal_sram_uintptr_t;
     using difference_type        = typename iterator::difference_type;
     using value_type             = typename iterator::value_type;
-    using pointer                = sram_ptr<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>;
-    using const_pointer          = mcal::memory::const_address_ptr<
-      sram_ptr<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>,
-      sram_const_ref<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>>;
+    using const_pointer          = mcal::memory::const_address_ptr<pointer, const_reference>;
     using reference              = typename iterator::reference;
-    using const_reference        = sram_const_ref<T, mcal_sram_uintptr_t, mcal_sram_ptrdiff_t>;
 
     constexpr array() noexcept = default;
 
@@ -154,6 +151,9 @@
     }
   };
 
+  template<typename T, mcal_sram_uintptr_t N, mcal_sram_uintptr_t Address>
+  constexpr mcal_sram_uintptr_t mcal::memory::sram::array<T, N, Address>::static_size;
+
   template<typename T,
            mcal_sram_uintptr_t N,
            mcal_sram_uintptr_t Address>
@@ -174,7 +174,7 @@
     return std::lexicographical_compare(left.cbegin(),
                                         left.cend(),
                                         right.cbegin(),
-                                         right.cend(),
+                                        right.cend(),
                                         [](const auto& x, const auto& y)
                                         {
                                           return x.value() < y.value();
@@ -252,8 +252,5 @@
       using type = T;
     };
   }
-
-  template<typename T, mcal_sram_uintptr_t N, mcal_sram_uintptr_t Address>
-  constexpr mcal_sram_uintptr_t mcal::memory::sram::array<T, N, Address>::static_size;
 
 #endif // MCAL_MEMORY_SRAM_ARRAY_2020_04_26_H

@@ -56,8 +56,8 @@
     auto operator++() noexcept -> const_address_ptr& { my_ptr += static_size; return *this; }
     auto operator--() noexcept -> const_address_ptr& { my_ptr -= static_size; return *this; }
 
-    const_address_ptr operator++(int) noexcept { const const_address_ptr tmp = *this; my_ptr += static_size; return tmp; }
-    const_address_ptr operator--(int) noexcept { const const_address_ptr tmp = *this; my_ptr -= static_size; return tmp; }
+    auto operator++(int) noexcept -> const_address_ptr { const const_address_ptr tmp = *this; my_ptr += static_size; return tmp; }
+    auto operator--(int) noexcept -> const_address_ptr { const const_address_ptr tmp = *this; my_ptr -= static_size; return tmp; }
 
     auto operator+(difference_type n) const noexcept -> const_address_ptr
     {
@@ -85,8 +85,8 @@
 
   private:
     static constexpr pointer offset_pointer(pointer ptr,
-                                             difference_type n,
-                                             bool subtract = false) noexcept
+                                            difference_type n,
+                                            bool subtract = false) noexcept
     {
       return ((n < 0) ? (subtract ? ptr + difference_type((size_type(0U) - size_type(n)) * static_size)
                                   : ptr - difference_type((size_type(0U) - size_type(n)) * static_size))
