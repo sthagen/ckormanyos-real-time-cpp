@@ -40,11 +40,12 @@
   {
   public:
     using pointer           = mcal::memory::const_address_ptr<progmem_ptr<ValueType, AddressType, AddressDifferenceType>>;
+    using const_pointer     = pointer;
     using difference_type   = typename pointer::difference_type;
     using value_type        = typename pointer::value_type;
     using reference         = typename pointer::reference;
     using iterator_category = std::random_access_iterator_tag;
-    using operations         = mcal::memory::random_access_iterator_operations<pointer>;
+    using operations        = mcal::memory::random_access_iterator_operations<pointer>;
 
     progmem_iterator() noexcept = default;
 
@@ -55,11 +56,9 @@
     template<typename OtherValueType,
              typename OtherAddressType,
              typename OtherAddressDifferenceType,
-             typename std::enable_if_t<
-                std::is_convertible<OtherValueType, ValueType>::value &&
-               std::is_convertible<OtherAddressType, AddressType>::value &&
-               std::is_convertible<OtherAddressDifferenceType, AddressDifferenceType>::value
-             >* = nullptr>
+             typename std::enable_if_t<   std::is_convertible_v<OtherValueType, ValueType>
+                                       && std::is_convertible_v<OtherAddressType, AddressType>
+                                       && std::is_convertible_v<OtherAddressDifferenceType, AddressDifferenceType>>* = nullptr>
     progmem_iterator(const progmem_iterator<OtherValueType, OtherAddressType, OtherAddressDifferenceType>& other) noexcept
       : current(static_cast<const pointer>(other.current)) { }
 
@@ -76,8 +75,8 @@
     auto operator++() noexcept -> progmem_iterator& { operations::increment(current, difference_type(1)); return *this; }
     auto operator--() noexcept -> progmem_iterator& { operations::increment(current, difference_type(-1)); return *this; }
 
-    progmem_iterator operator++(int) noexcept { const progmem_iterator tmp = *this; ++(*this); return tmp; }
-    progmem_iterator operator--(int) noexcept { const progmem_iterator tmp = *this; --(*this); return tmp; }
+    auto operator++(int) noexcept -> progmem_iterator { const progmem_iterator tmp = *this; ++(*this); return tmp; }
+    auto operator--(int) noexcept -> progmem_iterator { const progmem_iterator tmp = *this; --(*this); return tmp; }
 
     auto operator+(difference_type n) const noexcept -> progmem_iterator
     {

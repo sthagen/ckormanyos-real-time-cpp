@@ -528,6 +528,9 @@
                                     && decltype(traits_helper::test_implicitly_convertible<From, To>(0))::value)
                                 || (std::is_void<From>::value && std::is_void<To>::value)> { };
 
+    template< class From, class To >
+    constexpr bool is_convertible_v = is_convertible<From, To>::value;
+
     template <class T, class ...Args> struct is_constructible
       : public std::integral_constant<bool, sizeof(traits_helper::is_constructible_imp::test<T, Args...>(0)) == sizeof(traits_helper::yes_type)>
     {

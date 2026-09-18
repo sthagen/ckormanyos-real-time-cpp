@@ -42,11 +42,9 @@
     template<typename OtherValueType,
              typename OtherAddressType,
              typename OtherAddressDifferenceType,
-             typename std::enable_if_t<
-               std::is_convertible<OtherValueType, ValueType>::value &&
-               std::is_convertible<OtherAddressType, address_type>::value &&
-               std::is_convertible<OtherAddressDifferenceType, AddressDifferenceType>::value
-             >* = nullptr>
+             typename std::enable_if_t<   std::is_convertible_v<OtherValueType, value_type>
+                                       && std::is_convertible_v<OtherAddressType, address_type>
+                                       && std::is_convertible_v<OtherAddressDifferenceType, AddressDifferenceType>>* = nullptr>
     progmem_ptr(const progmem_ptr<OtherValueType, OtherAddressType, OtherAddressDifferenceType>& other) noexcept
       : my_address(other.my_address) { }
 
@@ -58,8 +56,8 @@
     auto operator++() noexcept -> progmem_ptr& { my_address += value_size; return *this; }
     auto operator--() noexcept -> progmem_ptr& { my_address -= value_size; return *this; }
 
-    progmem_ptr operator++(int) noexcept { const progmem_ptr tmp = *this; my_address += value_size; return tmp; }
-    progmem_ptr operator--(int) noexcept { const progmem_ptr tmp = *this; my_address -= value_size; return tmp; }
+    auto operator++(int) noexcept -> progmem_ptr { const progmem_ptr tmp = *this; my_address += value_size; return tmp; }
+    auto operator--(int) noexcept -> progmem_ptr { const progmem_ptr tmp = *this; my_address -= value_size; return tmp; }
 
     auto operator[](difference_type n) const noexcept -> reference
     {

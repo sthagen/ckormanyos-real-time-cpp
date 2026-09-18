@@ -38,19 +38,20 @@
            typename AddressType,
            typename AddressDifferenceType>
   class sram_iterator
-
   {
+  private:
+    using sram_ptr_type = sram_ptr<ValueType, AddressType, AddressDifferenceType>;
+    using sram_const_ref_type = sram_const_ref<ValueType, AddressType, AddressDifferenceType>;
+
   public:
-    using pointer           = mcal::memory::nonconst_address_ptr<sram_ptr<ValueType, AddressType, AddressDifferenceType>>;
+    using pointer           = mcal::memory::nonconst_address_ptr<sram_ptr_type>;
     using difference_type   = typename pointer::difference_type;
     using value_type        = typename pointer::value_type;
-    using const_pointer     = mcal::memory::const_address_ptr<
-      sram_ptr<ValueType, AddressType, AddressDifferenceType>,
-      sram_const_ref<ValueType, AddressType, AddressDifferenceType>>;
+    using const_pointer     = mcal::memory::const_address_ptr<sram_ptr_type, sram_const_ref_type>;
     using reference         = typename pointer::reference;
-    using const_reference   = sram_const_ref<ValueType, AddressType, AddressDifferenceType>;
+    using const_reference   = sram_const_ref_type;
     using iterator_category = std::random_access_iterator_tag;
-    using operations         = mcal::memory::random_access_iterator_operations<pointer>;
+    using operations        = mcal::memory::random_access_iterator_operations<pointer>;
 
     sram_iterator() noexcept = default;
 
@@ -66,11 +67,9 @@
     template<typename OtherValueType,
              typename OtherAddressType,
              typename OtherAddressDifferenceType,
-             typename std::enable_if_t<
-                std::is_convertible<OtherValueType, ValueType>::value &&
-               std::is_convertible<OtherAddressType, AddressType>::value &&
-               std::is_convertible<OtherAddressDifferenceType, AddressDifferenceType>::value
-             >* = nullptr>
+             typename std::enable_if_t<   std::is_convertible_v<OtherValueType, ValueType>
+                                       && std::is_convertible_v<OtherAddressType, AddressType>
+                                       && std::is_convertible_v<OtherAddressDifferenceType, AddressDifferenceType>>* = nullptr>
     sram_iterator(const sram_iterator<OtherValueType, OtherAddressType, OtherAddressDifferenceType>& other) noexcept
       : current(static_cast<const pointer>(other.current)) { }
 
@@ -97,8 +96,8 @@
     auto operator++() noexcept -> sram_iterator& { operations::increment(current, difference_type(1)); return *this; }
     auto operator--() noexcept -> sram_iterator& { operations::increment(current, difference_type(-1)); return *this; }
 
-    sram_iterator operator++(int) noexcept { const sram_iterator tmp = *this; ++(*this); return tmp; }
-    sram_iterator operator--(int) noexcept { const sram_iterator tmp = *this; --(*this); return tmp; }
+    auto operator++(int) noexcept -> sram_iterator { const sram_iterator tmp = *this; ++(*this); return tmp; }
+    auto operator--(int) noexcept -> sram_iterator { const sram_iterator tmp = *this; --(*this); return tmp; }
 
     auto operator+(difference_type n) const noexcept -> sram_iterator
     {
@@ -132,13 +131,14 @@
       return const_pointer(current) - const_pointer(other.current);
     }
 
-    auto operator<(const const_pointer& other) const noexcept -> bool { return const_pointer(current) < other; }
+    auto operator-(const const_pointer& other) const noexcept -> difference_type { return const_pointer(current) - other; }
+
+    auto operator< (const const_pointer& other) const noexcept -> bool { return const_pointer(current) < other; }
     auto operator<=(const const_pointer& other) const noexcept -> bool { return const_pointer(current) <= other; }
-    auto operator>(const const_pointer& other) const noexcept -> bool { return const_pointer(current) > other; }
+    auto operator> (const const_pointer& other) const noexcept -> bool { return const_pointer(current) > other; }
     auto operator>=(const const_pointer& other) const noexcept -> bool { return const_pointer(current) >= other; }
     auto operator==(const const_pointer& other) const noexcept -> bool { return const_pointer(current) == other; }
     auto operator!=(const const_pointer& other) const noexcept -> bool { return const_pointer(current) != other; }
-    auto operator-(const const_pointer& other) const noexcept -> difference_type { return const_pointer(current) - other; }
 
   private:
     pointer current{};

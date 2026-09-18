@@ -90,6 +90,12 @@
   };
 
   template<typename T, mcal_progmem_uintptr_t N>
+  constexpr mcal_progmem_uintptr_t mcal::memory::progmem::array<T, N>::static_size;
+
+  template<typename T, mcal_progmem_uintptr_t N>
+  constexpr mcal_progmem_uintptr_t mcal::memory::progmem::array<T, N>::storage_size;
+
+  template<typename T, mcal_progmem_uintptr_t N>
   auto operator==(const array<T, N>& left, const array<T, N>& right) noexcept -> bool
   {
     return std::equal(left.cbegin(), left.cend(), right.cbegin(),
@@ -163,11 +169,5 @@
       using type = T;
     };
   }
-
-  template<typename T, mcal_progmem_uintptr_t N>
-  constexpr mcal_progmem_uintptr_t mcal::memory::progmem::array<T, N>::static_size;
-
-  template<typename T, mcal_progmem_uintptr_t N>
-  constexpr mcal_progmem_uintptr_t mcal::memory::progmem::array<T, N>::storage_size;
 
 #endif // MCAL_MEMORY_PROGMEM_ARRAY_2019_05_04_H

@@ -32,13 +32,14 @@
       return current - n;
     }
 
-    static auto less(const pointer& left, const pointer& right) noexcept -> bool { return left < right; }
-    static auto less_equal(const pointer& left, const pointer& right) noexcept -> bool { return left <= right; }
-    static auto equal(const pointer& left, const pointer& right) noexcept -> bool { return left == right; }
-    static auto not_equal(const pointer& left, const pointer& right) noexcept -> bool { return left != right; }
-    static auto greater_equal(const pointer& left, const pointer& right) noexcept -> bool { return left >= right; }
-    static auto greater(const pointer& left, const pointer& right) noexcept -> bool { return left > right; }
-    static auto distance(const pointer& left, const pointer& right) noexcept -> difference_type { return left - right; }
+    static auto distance(const pointer& left, const pointer& right) noexcept -> difference_type { return (left - right); }
+
+    static auto less         (const pointer& left, const pointer& right) noexcept -> bool { return (left <  right); }
+    static auto less_equal   (const pointer& left, const pointer& right) noexcept -> bool { return (left <= right); }
+    static auto equal        (const pointer& left, const pointer& right) noexcept -> bool { return (left == right); }
+    static auto not_equal    (const pointer& left, const pointer& right) noexcept -> bool { return (left != right); }
+    static auto greater_equal(const pointer& left, const pointer& right) noexcept -> bool { return (left >= right); }
+    static auto greater      (const pointer& left, const pointer& right) noexcept -> bool { return (left >  right); }
   };
 
   } } // namespace mcal::memory
