@@ -111,18 +111,18 @@
         range_construct(first, last, typename std::iterator_traits<input_iterator>::iterator_category());
       }
 
-       vector(const vector& other) : my_allocator(other.my_allocator),
-                                     my_first(allocate_storage(my_allocator, other.size())),
-                                     my_last (end_pointer(my_first, other.size())),
-                                     my_end  (my_last)
+      vector(const vector& other) : my_allocator(other.my_allocator),
+                                    my_first(allocate_storage(my_allocator, other.size())),
+                                    my_last (end_pointer(my_first, other.size())),
+                                    my_end  (my_last)
       {
         copy_construct(other.my_first, other.my_last, my_first);
       }
 
       vector(const vector& other, const allocator_type& a) : my_allocator(a),
-                                                              my_first(allocate_storage(my_allocator, other.size())),
-                                                              my_last (end_pointer(my_first, other.size())),
-                                                              my_end  (my_last)
+                                                             my_first(allocate_storage(my_allocator, other.size())),
+                                                             my_last (end_pointer(my_first, other.size())),
+                                                             my_end  (my_last)
       {
         copy_construct(other.my_first, other.my_last, my_first);
       }
@@ -138,9 +138,9 @@
       }
 
       vector(vector&& other, const allocator_type& a) : my_allocator(a),
-                                                         my_first(nullptr),
-                                                         my_last (nullptr),
-                                                         my_end  (nullptr)
+                                                        my_first(nullptr),
+                                                        my_last (nullptr),
+                                                        my_end  (nullptr)
       {
         if(my_allocator == other.my_allocator)
         {
@@ -164,7 +164,7 @@
               const allocator_type& a = allocator_type()) : my_allocator(a),
                                                             my_first(allocate_storage(my_allocator, lst.size())),
                                                             my_last (end_pointer(my_first, lst.size())),
-                                                           my_end  (my_last)
+                                                            my_end  (my_last)
       {
         copy_construct(lst.begin(), lst.end(), my_first);
       }
@@ -332,8 +332,9 @@
       template<typename input_iterator>
       void assign(input_iterator first, input_iterator last)
       {
-        clear();
-        for(; first != last; ++first) { push_back(*first); }
+        assign_range(first,
+                     last,
+                     typename std::iterator_traits<input_iterator>::iterator_category());
       }
 
       void push_back(const value_type& value)
@@ -475,6 +476,31 @@
       }
 
       template<typename input_iterator>
+      void assign_range(input_iterator first,
+                        input_iterator last,
+                        std::input_iterator_tag)
+      {
+        clear();
+        for(; first != last; ++first) { push_back(*first); }
+      }
+
+      template<typename forward_iterator>
+      void assign_range(forward_iterator first,
+                        forward_iterator last,
+                        std::forward_iterator_tag)
+      {
+        const size_type count = static_cast<size_type>(std::distance(first, last));
+
+        clear();
+        reserve(count);
+
+        for(; first != last; ++first)
+        {
+          push_back(*first);
+        }
+      }
+
+      template<typename input_iterator>
       void range_construct(input_iterator first,
                            input_iterator last,
                            std::input_iterator_tag)
@@ -501,7 +527,6 @@
           construct(destination, *first);
         }
       }
-
     };
 
     template<typename T, typename alloc>
