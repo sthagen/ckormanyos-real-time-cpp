@@ -10,6 +10,8 @@
 
   #include <mcal_memory/mcal_memory_sram_types.h>
 
+  #include <cstddef>
+  #include <cstdint>
   #include <vector>
 
   namespace mcal { namespace memory { namespace sram {
@@ -27,7 +29,7 @@
     {
       // Read one byte from the class memory buffer.
 
-      *p_byte_to_read = *reinterpret_cast<std::uint8_t*>(my_buffer.data() + static_cast<std::ptrdiff_t>(address));
+      *p_byte_to_read = *(my_buffer.data() + static_cast<std::ptrdiff_t>(address));
 
       return true;
     }
@@ -59,7 +61,7 @@
     {
       // Write one byte to the class memory buffer.
 
-      *reinterpret_cast<std::uint8_t*>(my_buffer.data() + static_cast<std::ptrdiff_t>(address)) = *p_byte_to_write;
+      *(my_buffer.data() + static_cast<std::ptrdiff_t>(address)) = *p_byte_to_write;
 
       return true;
     }
@@ -88,7 +90,7 @@
     }
 
   private:
-    std::vector<std::uint8_t> my_buffer = std::vector<std::uint8_t>(static_cast<std::size_t>(byte_size_total()));
+    std::vector<std::uint8_t> my_buffer;
 
     static constexpr auto byte_size_total() noexcept -> mcal_sram_uintptr_t { return static_cast<mcal_sram_uintptr_t>(ByteSizeTotal); }
   };
